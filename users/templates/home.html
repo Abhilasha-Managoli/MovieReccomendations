@@ -12,21 +12,16 @@
         body, html {
             height: 100%;
             margin: 0;
-            color: #36a7b4; /* Blue text color */
-            background-color: #000; /* Black background color */
+            color: #36a7b4;
+            background-color: #000;
         }
         .container {
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            padding-top: 50px;
             text-align: center;
         }
         .content {
-            max-width: 600px; /* Optional: restricts width of content */
-            margin: auto; /* Centers the content horizontally */
-            padding: 0 15px; /* Optional: adds some padding */
+            max-width: 600px;
+            margin: auto;
+            padding: 0 15px;
         }
         .btn-primary {
             background-color: #36a7b4;
@@ -36,19 +31,22 @@
             padding: 10px 20px;
             border-radius: 5px;
         }
+        .text-spacing {
+            margin-bottom: 40px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="content">
-            <div>
+            <div class = text-spacing>
                 <h2>Welcome to Movie Recommendations</h2>
             </div>
-            <div>
+            <div class = text-spacing>
                 <h3>Get Tailored Movie Recommendations with Our AI-Powered System</h3>
             </div>
-            <p>Discover movies you'll love with personalized recommendations based on your viewing history and custom filters. Our AI technology analyzes your preferences to suggest the perfect films for your unique taste, making movie night easier and more enjoyable than ever.</p>
-            <a href="{% provider_login_url 'google' %}?next=/" class="btn btn-primary">Login With Google</a>
+            <p class = text-spacing>Discover movies you'll love with personalized recommendations based on your viewing history and custom filters. Our AI technology analyzes your preferences to suggest the perfect films for your unique taste, making movie night easier and more enjoyable than ever.</p>
+            <a href="{% provider_login_url 'google' %}?next=/" class="btn btn-primary text-spacing">Login With Google</a>
 
             {% if user.is_authenticated %}
             <p>You are signed in as {{ user.email }}</p>
