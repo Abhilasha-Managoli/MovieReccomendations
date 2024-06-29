@@ -1,3 +1,4 @@
+{% load socialaccount %}
 <!DOCTYPE html>
 
 <html lang="en">
@@ -6,16 +7,54 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-    <title>Django Google Sign In</title>
+    <title>Movie Recommendations Sign in</title>
+   <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            color: #36a7b4; /* Blue text color */
+            background-color: #000; /* Black background color */
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding-top: 50px;
+            text-align: center;
+        }
+        .content {
+            max-width: 600px; /* Optional: restricts width of content */
+            margin: auto; /* Centers the content horizontally */
+            padding: 0 15px; /* Optional: adds some padding */
+        }
+        .btn-primary {
+            background-color: #36a7b4;
+            border-color: #36a7b4;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
-    {% load socialaccount %}
-    <h2>Google Login</h2>
-    <a href="{% provider_login_url 'google' %}?next=/">Login With Google</a>
+    <div class="container">
+        <div class="content">
+            <div>
+                <h2>Welcome to Movie Recommendations</h2>
+            </div>
+            <div>
+                <h3>Get Tailored Movie Recommendations with Our AI-Powered System</h3>
+            </div>
+            <p>Discover movies you'll love with personalized recommendations based on your viewing history and custom filters. Our AI technology analyzes your preferences to suggest the perfect films for your unique taste, making movie night easier and more enjoyable than ever.</p>
+            <a href="{% provider_login_url 'google' %}?next=/" class="btn btn-primary">Login With Google</a>
 
-    {% if user.is_authenticated %}
-    <p>You are signed in as {{ user.email }}</p>
-    <a href="{% url 'account_logout' %}">Logout</a>
-    {% endif %}
+            {% if user.is_authenticated %}
+            <p>You are signed in as {{ user.email }}</p>
+            <a href="{% url 'account_logout' %}" class="btn btn-secondary">Logout</a>
+            {% endif %}
+        </div>
+    </div>
 </body>
 </html>
