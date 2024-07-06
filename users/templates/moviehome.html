@@ -1,4 +1,3 @@
-{% load socialaccount %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,12 +36,12 @@
             background-color: #ef476f; /* Pink */
             border-color: #ef476f;
             color: #ffffff; /* White text */
-            position: absolute
-            padding: 10px 20px;
-            border-radius: 5px;
+            position: absolute;
+            padding: 10px 20px
+            border-radius: 5px
         }
         .btn-primary:hover {
-            background-color: #d6406c; /* Darker shade of pink for hover effect */
+            background-color: #d6406c;
             border-color: #d6406c;
         }
         .btn-secondary {
@@ -57,32 +56,37 @@
             background-color: #e0b837;
             border-color: #e0b837;
         }
-        .recommendation-text {
-            text-align: center;
-            padding: 20px;
-            max-width: 600px; /* Adjusted max-width */
-            margin: auto; /* Center horizontally */
-        }
+
     </style>
 </head>
 <body>
     <div class="container">
         <a href="{% url 'users:logout' %}" class="btn btn-secondary">Logout</a>
+
         <div class="jumbotron">
             <h1 class="display-4">Movie Recommendations</h1>
+            <p class="lead">Welcome back, {{ user_name }}!</p>
         </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form method="post" action="{% url 'users:process_movie' %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="favorite_movie">Enter your favorite movie:</label>
+                        <input type="text" class="form-control" id="favorite_movie" name="favorite_movie" placeholder="Enter your favorite movie" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+
+                {% if favorite_movie %}
+                    <div class="mt-3">
+                        <p>Your favorite movie: <strong>{{ favorite_movie }}</strong></p>
+                    </div>
+                {% endif %}
+            </div>
         </div>
-            <p class="recommendation-text">Discover movies you'll love with personalized recommendations based on your viewing history and custom filters. Our AI technology analyzes your preferences to suggest the perfect films for your unique taste, making movie night easier and more enjoyable than ever.</p>
-        </div>
-        <div class="text-center mt-3">
-            {% if user.is_authenticated %}
-                <h4>You are signed in as {{ user.email }}!</h4>
-                <a href="{% url 'users:movie_recommendation' %}" class="btn btn-primary text-spacing">Continue to Movie Recommendations</a>
-                <a href="{% url 'users:logout' %}" class="btn btn-secondary logout-btn">Logout</a>
-            {% else %}
-                <a href="{% provider_login_url 'google' %}?next={% url 'users:movie_recommendation' %}" class="btn btn-primary text-spacing">Login With Google</a>
-            {% endif %}
-        </div>
+
     </div>
 </body>
 </html>
