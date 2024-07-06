@@ -1,1 +1,88 @@
-# enter here
+{% load socialaccount %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Movie Recommendations</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8ffe5;
+            color: #333333;
+            position: relative;
+        }
+        .jumbotron {
+            background-color: #f8ffe5;
+            color: #000;
+            text-align: center;
+            padding: 2rem 1rem;
+            margin-bottom: 0;
+            border: none;
+        }
+        .jumbotron h1,
+        .jumbotron p {
+            margin: 0;
+        }
+        .card {
+            background-color: #f8ffe5;
+            margin-top: 20px;
+            border: none;
+            border-radius: 0;
+        }
+        .form-control {
+            border-color: #1b9aaa; /* Cyan blue border color for form elements */
+        }
+        .btn-primary {
+            background-color: #ef476f; /* Pink */
+            border-color: #ef476f;
+            color: #ffffff; /* White text */
+            position: absolute
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+        .btn-primary:hover {
+            background-color: #d6406c; /* Darker shade of pink for hover effect */
+            border-color: #d6406c;
+        }
+        .btn-secondary {
+            background-color: #ffc43d;
+            border-color: #ffc43d;
+            color: #ffffff;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .btn-secondary:hover {
+            background-color: #e0b837;
+            border-color: #e0b837;
+        }
+        .recommendation-text {
+            text-align: center;
+            padding: 20px;
+            max-width: 600px; /* Adjusted max-width */
+            margin: auto; /* Center horizontally */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'users:logout' %}" class="btn btn-secondary">Logout</a>
+        <div class="jumbotron">
+            <h1 class="display-4">Movie Recommendations</h1>
+        </div>
+        </div>
+            <p class="recommendation-text">Discover movies you'll love with personalized recommendations based on your viewing history and custom filters. Our AI technology analyzes your preferences to suggest the perfect films for your unique taste, making movie night easier and more enjoyable than ever.</p>
+        </div>
+        <div class="text-center mt-3">
+            {% if user.is_authenticated %}
+                <h4>You are signed in as {{ user.email }}!</h4>
+                <a href="{% url 'users:movie_recommendation' %}" class="btn btn-primary text-spacing">Continue to Movie Recommendations</a>
+                <a href="{% url 'users:logout' %}" class="btn btn-secondary logout-btn">Logout</a>
+            {% else %}
+                <a href="{% provider_login_url 'google' %}?next={% url 'users:movie_recommendation' %}" class="btn btn-primary text-spacing">Login With Google</a>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
