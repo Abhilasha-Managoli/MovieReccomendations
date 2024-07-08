@@ -129,7 +129,7 @@
                             <div class="card">
                                 <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
                                 <h5 class="card-title">{{ movie.title }}</h5>
-                                <p class="card-rating">Rating: {{movie.vote_average}}/10</p>
+                                <p class="card-rating">Rating: {{movie.vote_average|floatformat:1 }}</p>
                             </div>
                         </div>
                     {% endfor %}
