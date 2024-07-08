@@ -8,4 +8,5 @@ urlpatterns = [
     path("process_movie/", views.process_movie, name='process_movie'),
     path("logout/", views.logout_view, name='logout'),
     path('recommendations/', views.recommendations, name='recommendations'),
+    path('userinfo/', views.userinfo_view, name='userinfo'),
 ]

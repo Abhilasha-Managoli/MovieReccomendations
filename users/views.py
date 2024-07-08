@@ -25,6 +25,9 @@ def movie_recommendation(request):
     user_name = request.user.first_name.capitalize() if request.user.first_name else ''
     return render(request, 'moviehome.html', {'user_name': user_name})
 
+@login_required
+def userinfo_view(request):
+    return render(request, 'userinfo.html')
 
 @login_required
 def process_movie(request):
@@ -39,7 +42,6 @@ def process_movie(request):
 def logout_view(request):
     logout(request)
     return redirect("/")
-
 
 @login_required
 def recommendations(request):

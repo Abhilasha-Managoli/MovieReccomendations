@@ -11,6 +11,9 @@
             background-color: #f8ffe5;
             color: #333333;
             position: relative;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
         }
         .jumbotron {
             background-color: #f8ffe5;
@@ -46,19 +49,41 @@
             background-color: #d6406c; /* Darker shade of pink for hover effect */
             border-color: #d6406c;
         }
+
         .btn-secondary {
             background-color: #ffc43d;
             border-color: #ffc43d;
             color: #ffffff;
-            position: absolute;
-            top: 10px;
+            position: fixed;
+            top: 0;
             right: 10px;
+            padding: 6px;
+        }
+
+        .btn-secondary-2 {
+            background-color: #ffc43d;
+            border-color: #ffc43d;
+            color: #ffffff;
+            position: fixed;
+            top: 0;
+            right: 100px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: calc(100% -130px);
+            padding: 6px 10px
         }
 
         .btn-secondary:hover {
             background-color: #e0b837;
             border-color: #e0b837;
         }
+
+        .btn-secondary-2:hover {
+            background-color: #e0b837;
+            border-color: #e0b837;
+        }
+
         .recommendation-text {
             text-align: center;
             padding: 10px;
@@ -95,15 +120,15 @@
 <body>
     <div class="container">
         <div class="row mb-4">
-            <div class="col-auto ml-auto">
+            <div class="col-auto">
                 {% if user.is_authenticated %}
-                    <button class="btn btn-secondary logout-btn btn-with-margin">{{ user.first_name }}</button>
+                    <a href="{% url 'users:userinfo' %}" class="btn btn-secondary-2">{{ user.first_name }}</a>
                 {% else %}
-                    <a href="{% provider_login_url 'google' %}?next={% url 'users:movie_recommendation' %}" class="btn btn-secondary logout-btn">Login With Google</a>
+                    <a href="{% provider_login_url 'google' %}?next={% url 'users:movie_recommendation' %}" class="btn btn-secondary-2 logout-btn">Login With Google</a>
             {% endif %}
         </div>
         <div class="col-auto">
-            <a href="{% url 'users:logout' %}" class="btn btn-secondary btn-with-margin2">Logout</a>
+            <a href="{% url 'users:logout' %}" class="btn btn-secondary">Logout</a>
         </div>
     </div>
 
@@ -137,5 +162,17 @@
             </div>
         </div>
     </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var usernameButton = document.querySelector('.btn-secondary-2');
+        var username = '{{ user.first_name|default_if_none:"" }}';
+        if (username.length > 10) {
+            username = username.substring(0, 10) + '...';
+        }
+        usernameButton.textContent = username;
+        usernameButton.setAttribute('title', '{{ user.first_name }}');
+
+    });
+</script>
 </body>
 </html>
