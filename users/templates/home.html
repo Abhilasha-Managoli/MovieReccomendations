@@ -30,6 +30,7 @@
             border: none;
             border-radius: 0;
         }
+
         .form-control {
             border-color: #1b9aaa; /* Cyan blue border color for form elements */
         }
@@ -53,35 +54,87 @@
             top: 10px;
             right: 10px;
         }
+
         .btn-secondary:hover {
             background-color: #e0b837;
             border-color: #e0b837;
         }
         .recommendation-text {
             text-align: center;
-            padding: 20px;
-            max-width: 600px; /* Adjusted max-width */
-            margin: auto; /* Center horizontally */
+            padding: 10px;
+            max-width: 600px;
+            margin: auto;
         }
+        .card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px
+        }
+
+        .card-rating{
+            font-size: 0.9rem;
+            color: #6c757d
+        }
+
+        .card-title {
+            margin-top: 10px;
+            font-size: 1rem;
+        }
+
+        .btn-with-margin {
+            margin-left: 20px;
+        }
+
+        .btn-with-margin2 {
+            margin-left: 60px;
+        }
+
+
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="{% url 'users:logout' %}" class="btn btn-secondary">Logout</a>
+        <div class="row mb-4">
+            <div class="col-auto ml-auto">
+                {% if user.is_authenticated %}
+                    <button class="btn btn-secondary logout-btn btn-with-margin">{{ user.first_name }}</button>
+                {% else %}
+                    <a href="{% provider_login_url 'google' %}?next={% url 'users:movie_recommendation' %}" class="btn btn-secondary logout-btn">Login With Google</a>
+            {% endif %}
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'users:logout' %}" class="btn btn-secondary btn-with-margin2">Logout</a>
+        </div>
+    </div>
+
         <div class="jumbotron">
             <h1 class="display-4">Movie Recommendations</h1>
         </div>
+
+        <div class="text-center mt-1 mb-4">
+        <p class="recommendation-text">Discover movies you'll love with personalized recommendations based on your viewing history and custom filters. Our AI technology analyzes your preferences to suggest the perfect films for your unique taste, making movie night easier and more enjoyable than ever.</p>
         </div>
-            <p class="recommendation-text">Discover movies you'll love with personalized recommendations based on your viewing history and custom filters. Our AI technology analyzes your preferences to suggest the perfect films for your unique taste, making movie night easier and more enjoyable than ever.</p>
+
+
+        <div class="text-center mb-4">
+            <a href="{% url 'users:movie_recommendation' %}" class="btn btn-primary text-spacing">Continue to Movie Recommendations</a>
         </div>
-        <div class="text-center mt-3">
-            {% if user.is_authenticated %}
-                <h4>You are signed in as {{ user.email }}!</h4>
-                <a href="{% url 'users:movie_recommendation' %}" class="btn btn-primary text-spacing">Continue to Movie Recommendations</a>
-                <a href="{% url 'users:logout' %}" class="btn btn-secondary logout-btn">Logout</a>
-            {% else %}
-                <a href="{% provider_login_url 'google' %}?next={% url 'users:movie_recommendation' %}" class="btn btn-primary text-spacing">Login With Google</a>
-            {% endif %}
+
+        <div class="row mt-4">
+            <div class="col">
+                <h2 class="mb-4">Trending Movies</h2>
+                <div class="row">
+                    {% for movie in trending_movies %}
+                        <div class="col-md-2 mb-4">
+                            <div class="card">
+                                <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
+                                <h5 class="card-title">{{ movie.title }}</h5>
+                                <p class="card-rating">Rating: {{movie.vote_average}}/10</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
     </div>
 </body>
