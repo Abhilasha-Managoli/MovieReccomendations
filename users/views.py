@@ -4,6 +4,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 
+from users.models import Wishlist
+
 
 def home(request):
     url_trending = 'https://api.themoviedb.org/3/trending/movie/week'
@@ -20,19 +22,25 @@ def home(request):
     except requests.exceptions.RequestException as e:
         return HttpResponse(f"An error occurred: {e}", status=500)
 
+
 @login_required
 def movie_recommendation(request):
     user_name = request.user.first_name.capitalize() if request.user.first_name else ''
     return render(request, 'moviehome.html', {'user_name': user_name})
 
+
 @login_required
 def userinfo_view(request):
     return render(request, 'userinfo.html')
+
 
 @login_required
 def process_movie(request):
     if request.method == 'POST':
         favorite_movie = request.POST.get('favorite_movie')
+        Wishlist.objects.create(
+            user=request.user,
+            movie_title=favorite_movie)
         return render(request, 'moviehome.html', {'user_name': request.user.first_name.capitalize(),
                                                   'favorite_movie': favorite_movie})
     # If the method is not POST, redirect to the movie_recommendation page
@@ -42,6 +50,7 @@ def process_movie(request):
 def logout_view(request):
     logout(request)
     return redirect("/")
+
 
 @login_required
 def recommendations(request):
