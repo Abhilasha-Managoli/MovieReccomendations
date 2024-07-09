@@ -9,4 +9,6 @@ urlpatterns = [
     path("logout/", views.logout_view, name='logout'),
     path('recommendations/', views.recommendations, name='recommendations'),
     path('userinfo/', views.userinfo_view, name='userinfo'),
+    path('add_to_wishlist/', views.add_to_wishlist, name='add_to_wishlist'),
+
 ]
