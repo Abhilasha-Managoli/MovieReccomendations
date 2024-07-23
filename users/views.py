@@ -52,18 +52,34 @@ def logout_view(request):
 
 @login_required
 def recommendations(request):
+    user_name = request.user.first_name.capitalize() if request.user.first_name else ''
     query = request.GET.get('query', '')
-    url = 'https://api.themoviedb.org/3/search/movie'
+    url_movie = 'https://api.themoviedb.org/3/search/movie'
+    url_tv = 'https://api.themoviedb.org/3/search/tv'
+
     params = {
         'api_key': "6d9d64446aa322b6e954111c63b34344",
         'query': query,
     }
     try:
-        response = requests.get(url, params=params)
-        response.raise_for_status()  # Check if the request was successful
-        data = response.json()
-        movies = data.get('results', [])
-        return render(request, 'moviehome.html', {'movies': movies, 'query': query})
+        # Fetch movies
+        response_movie = requests.get(url_movie, params=params)
+        response_movie.raise_for_status()
+        movies = response_movie.json().get('results', [])
+
+        # Fetch TV shows
+        response_tv = requests.get(url_tv, params=params)
+        response_tv.raise_for_status()
+        tv_shows = response_tv.json().get('results', [])
+
+        # Combine movies and TV shows
+        combined_results = movies + tv_shows
+
+        return render(request, 'moviehome.html', {
+            'movies': combined_results,
+            'query': query,
+            'user_name': user_name
+        })
     except requests.exceptions.RequestException as e:
         return HttpResponse(f"An error occurred: {e}", status=500)
 
