@@ -97,7 +97,8 @@
                                 <img src="https://image.tmdb.org/t/p/w200{{ movie.poster_path }}" alt="{{ movie.title }} poster">
                                 <div>
                                     <h4>{{ movie.title }}</h4>
-                                    <p>Rating: {{ movie.vote_average }}</p>
+                                    <p>Rating: {{ movie.vote_average|floatformat:1 }}</p>
+                                    <p>Genres: {{ movie.genre_names|join:", " }}</p>
                                     <p>{{ movie.overview }}</p>
                                     <form method="post" action="{% url 'users:add_to_wishlist' %}">
                                         {% csrf_token %}

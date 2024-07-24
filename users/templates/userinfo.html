@@ -9,15 +9,97 @@
         body {
             background-color: #f8ffe5;
             color: #333333;
-            position: relative;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
         }
-
+        .sidebar {
+            background-color: #ef476f;
+            height: 100vh;
+            padding-top: 20px;
+        }
+        .sidebar a {
+            display: block;
+            padding: 10px;
+            color: #333333;
+            text-decoration: none;
+        }
+        .sidebar a:hover {
+            background-color: #ef476f;
+            color: white;
+        }
+        .content {
+            padding: 20px;
+        }
+        .nav-link.active {
+            background-color: #ef476f;
+            color: white;
+        }
     </style>
 </head>
 <body>
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar">
+                <div class="sidebar-sticky">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#personal-info" id="personal-info-tab">Personal Information</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#wishlist" id="wishlist-tab">Wishlist</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#favorites" id="favorites-tab">Favorites</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 content">
+                <div id="personal-info">
+                    <h2>Personal Information</h2>
+                    <p>Name: {{ user.first_name }} {{ user.last_name }}</p>
+                    <p>Username: {{ user.username }}</p>
+                    <p>Email: {{ user.email }}</p>
+                </div>
+                <div id="wishlist" style="display:none;">
+                    <h2>Wishlist</h2>
+                    <ul>
+                        {% for item in wishlist %}
+                            <li>{{ item.movie_title }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div id="favorites" style="display:none;">
+                    <h2>Favorites</h2>
+                    <!-- Add favorites content here -->
+                </div>
+            </main>
+        </div>
+    </div>
 
+    <script>
+        document.getElementById('personal-info-tab').addEventListener('click', function() {
+            document.getElementById('personal-info').style.display = 'block';
+            document.getElementById('wishlist').style.display = 'none';
+            document.getElementById('favorites').style.display = 'none';
+            this.classList.add('active');
+            document.getElementById('wishlist-tab').classList.remove('active');
+            document.getElementById('favorites-tab').classList.remove('active');
+        });
+        document.getElementById('wishlist-tab').addEventListener('click', function() {
+            document.getElementById('personal-info').style.display = 'none';
+            document.getElementById('wishlist').style.display = 'block';
+            document.getElementById('favorites').style.display = 'none';
+            this.classList.add('active');
+            document.getElementById('personal-info-tab').classList.remove('active');
+            document.getElementById('favorites-tab').classList.remove('active');
+        });
+        document.getElementById('favorites-tab').addEventListener('click', function() {
+            document.getElementById('personal-info').style.display = 'none';
+            document.getElementById('wishlist').style.display = 'none';
+            document.getElementById('favorites').style.display = 'block';
+            this.classList.add('active');
+            document.getElementById('personal-info-tab').classList.remove('active');
+            document.getElementById('wishlist-tab').classList.remove('active');
+        });
+    </script>
 </body>
 </html>
