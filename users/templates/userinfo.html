@@ -44,7 +44,7 @@
                             <a class="nav-link active" href="#personal-info" id="personal-info-tab">Personal Information</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#wishlist" id="wishlist-tab">Wishlist</a>
+                            <a class="nav-link" href="#wishlist" id="wishlist-tab">Watchlist</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#favorites" id="favorites-tab">Favorites</a>
@@ -60,7 +60,7 @@
                     <p>Email: {{ user.email }}</p>
                 </div>
                 <div id="wishlist" style="display:none;">
-                    <h2>Wishlist</h2>
+                    <h2>Watchlist</h2>
                     <ul>
                         {% for item in wishlist %}
                             <li>{{ item.movie_title }}</li>
