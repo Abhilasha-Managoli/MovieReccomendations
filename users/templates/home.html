@@ -1,3 +1,4 @@
+{% load static %}
 {% load socialaccount %}
 <!DOCTYPE html>
 <html lang="en">
@@ -109,10 +110,26 @@
         .btn-overlay:hover {
             background-color: #d6406c;
         }
+        .logo-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 10px;
+            z-index: 10;
+        }
+        .logo {
+        width:140px;
+        height:140px;
+        }
     </style>
 </head>
 <body>
+    <div class="logo-container">
+        <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo">
+    </div>
     <div class="container">
+        <div class="text-center mb-4">
+        </div>
         <div class="row mb-4">
             {% if user.is_authenticated %}
                 <div class="col-auto">
