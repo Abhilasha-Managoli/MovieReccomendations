@@ -41,7 +41,6 @@
             background-color: #ef476f; /* Pink */
             border-color: #ef476f;
             color: #ffffff; /* White text */
-            position: absolute
             padding: 10px 20px;
             border-radius: 5px;
         }
@@ -57,7 +56,7 @@
             position: fixed;
             top: 0;
             right: 10px;
-            padding: 6px;
+            padding: 6px 10px;
         }
 
         .btn-secondary-2 {
@@ -70,8 +69,8 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: calc(100% -130px);
-            padding: 6px 10px
+            max-width: calc(100% - 130px);
+            padding: 6px 10px;
         }
 
         .btn-secondary:hover {
@@ -93,12 +92,12 @@
         .card img {
             max-width: 100%;
             height: auto;
-            border-radius: 5px
+            border-radius: 5px;
         }
 
-        .card-rating{
+        .card-rating {
             font-size: 0.9rem;
-            color: #6c757d
+            color: #6c757d;
         }
 
         .card-title {
@@ -114,35 +113,35 @@
             margin-left: 60px;
         }
 
-
     </style>
 </head>
 <body>
     <div class="container">
         <div class="row mb-4">
-            <div class="col-auto">
-                {% if user.is_authenticated %}
-                    <a href="{% url 'users:userinfo' %}" class="btn btn-secondary-2">{{ user.first_name }}</a>
-                {% else %}
-                    <a href="{% provider_login_url 'google' %}?next={% url 'users:movie_recommendation' %}" class="btn btn-secondary-2 logout-btn">Login With Google</a>
+            {% if user.is_authenticated %}
+                <div class="col-auto">
+                    <a href="{% url 'users:userinfo' %}" class="btn btn-secondary-2" id="user-button">{{ user.first_name }}</a>
+                </div>
+                <div class="col-auto">
+                    <a href="{% url 'users:logout' %}" class="btn btn-secondary">Logout</a>
+                </div>
+            {% else %}
+                <div class="col-auto">
+                    <a href="{% provider_login_url 'google' %}?next={% url 'users:movie_recommendation' %}" class="btn btn-secondary-2">Login With Google</a>
+                </div>
             {% endif %}
         </div>
-        <div class="col-auto">
-            <a href="{% url 'users:logout' %}" class="btn btn-secondary">Logout</a>
-        </div>
-    </div>
 
         <div class="jumbotron">
             <h1 class="display-4">Movie Recommendations</h1>
         </div>
 
         <div class="text-center mt-1 mb-4">
-        <p class="recommendation-text">Discover movies you'll love with personalized recommendations based on your viewing history and custom filters. Our AI technology analyzes your preferences to suggest the perfect films for your unique taste, making movie night easier and more enjoyable than ever.</p>
+            <p class="recommendation-text">Discover movies you'll love with personalized recommendations based on your viewing history and custom filters. Our AI technology analyzes your preferences to suggest the perfect films for your unique taste, making movie night easier and more enjoyable than ever.</p>
         </div>
 
-
         <div class="text-center mb-4">
-            <a href="{% url 'users:movie_recommendation' %}" class="btn btn-primary text-spacing">Continue to Movie Recommendations</a>
+            <a href="{% url 'users:movie_recommendation' %}" class="btn btn-primary">Continue to Movie Recommendations</a>
         </div>
 
         <div class="row mt-4">
@@ -154,7 +153,7 @@
                             <div class="card">
                                 <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
                                 <h5 class="card-title">{{ movie.title }}</h5>
-                                <p class="card-rating">Rating: {{movie.vote_average|floatformat:1 }}</p>
+                                <p class="card-rating">Rating: {{ movie.vote_average|floatformat:1 }}</p>
                             </div>
                         </div>
                     {% endfor %}
@@ -164,15 +163,20 @@
     </div>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var usernameButton = document.querySelector('.btn-secondary-2');
-        var username = '{{ user.first_name|default_if_none:"" }}';
-        if (username.length > 10) {
-            username = username.substring(0, 10) + '...';
+        var usernameButton = document.querySelector('#user-button');
+        if (usernameButton) {
+            var username = '{{ user.first_name|default_if_none:"" }}';
+            if (username) {
+                if (username.length > 10) {
+                    username = username.substring(0, 10) + '...';
+                }
+                usernameButton.textContent = username;
+                usernameButton.setAttribute('title', '{{ user.first_name }}');
+            } else {
+                usernameButton.style.display = 'none'; // Hide the button if no username
+            }
         }
-        usernameButton.textContent = username;
-        usernameButton.setAttribute('title', '{{ user.first_name }}');
-
     });
-</script>
+    </script>
 </body>
 </html>
