@@ -103,7 +103,7 @@
                                     <form method="post" action="{% url 'users:add_to_wishlist' %}">
                                         {% csrf_token %}
                                         <input type="hidden" name="movie_title" value="{{ movie.title }}">
-                                        <button type="submit" class="btn btn-primary">Add to Wishlist</button>
+                                        <button type="submit" class="btn btn-primary">Add to Watchlist</button>
                                     </form>
                                 </div>
                             </div>

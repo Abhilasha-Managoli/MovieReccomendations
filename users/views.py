@@ -98,6 +98,8 @@ def recommendations(request):
 
         for item in combined_results:
             item['genre_names'] = [genres.get(genre_id, 'Unknown') for genre_id in item.get('genre_ids', [])]
+            # Ensure the title key is correctly set
+            item['title'] = item.get('title') or item.get('name')
 
         return render(request, 'moviehome.html', {
             'movies': combined_results,
@@ -115,6 +117,6 @@ def add_to_wishlist(request):
         Wishlist.objects.create(user=request.user, movie_title=movie_title)
         return render(request, 'moviehome.html', {
             'user_name': request.user.first_name.capitalize(),
-            'success_message': 'Movie added to wishlist!'
+            'success_message': 'Movie added to watchlist!'
         })
     return HttpResponse(status=405)
