@@ -32,10 +32,20 @@
             margin-top: 20px;
             border: none;
             border-radius: 0;
+            position: relative; /* This is needed for the absolute positioning of the button */
         }
-
-        .form-control {
-            border-color: #1b9aaa; /* Cyan blue border color for form elements */
+        .card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        .card-rating {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        .card-title {
+            margin-top: 10px;
+            font-size: 1rem;
         }
         .btn-primary {
             background-color: #ef476f; /* Pink */
@@ -48,7 +58,6 @@
             background-color: #d6406c; /* Darker shade of pink for hover effect */
             border-color: #d6406c;
         }
-
         .btn-secondary {
             background-color: #ffc43d;
             border-color: #ffc43d;
@@ -58,7 +67,6 @@
             right: 10px;
             padding: 6px 10px;
         }
-
         .btn-secondary-2 {
             background-color: #ffc43d;
             border-color: #ffc43d;
@@ -72,47 +80,35 @@
             max-width: calc(100% - 130px);
             padding: 6px 10px;
         }
-
         .btn-secondary:hover {
             background-color: #e0b837;
             border-color: #e0b837;
         }
-
         .btn-secondary-2:hover {
             background-color: #e0b837;
             border-color: #e0b837;
         }
-
         .recommendation-text {
             text-align: center;
             padding: 10px;
             max-width: 600px;
             margin: auto;
         }
-        .card img {
-            max-width: 100%;
-            height: auto;
+        .btn-overlay {
+            position: absolute;
+            top: 10px; /* Positioning from the top */
+            right: 10px; /* Positioning from the right */
+            background-color: #ef476f;
+            border: none;
+            color: white;
+            padding: 8px 12px;
             border-radius: 5px;
+            cursor: pointer;
+            z-index: 10; /* Ensure it's on top of other content */
         }
-
-        .card-rating {
-            font-size: 0.9rem;
-            color: #6c757d;
+        .btn-overlay:hover {
+            background-color: #d6406c;
         }
-
-        .card-title {
-            margin-top: 10px;
-            font-size: 1rem;
-        }
-
-        .btn-with-margin {
-            margin-left: 20px;
-        }
-
-        .btn-with-margin2 {
-            margin-left: 60px;
-        }
-
     </style>
 </head>
 <body>
@@ -152,6 +148,7 @@
                         <div class="col-md-2 mb-4">
                             <div class="card">
                                 <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
+                                <button class="btn-overlay add-to-wishlist" data-movie-id="{{ movie.id }}">+</button>
                                 <h5 class="card-title">{{ movie.title }}</h5>
                                 <p class="card-rating">Rating: {{ movie.vote_average|floatformat:1 }}</p>
                             </div>
@@ -161,21 +158,39 @@
             </div>
         </div>
     </div>
+
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var usernameButton = document.querySelector('#user-button');
-        if (usernameButton) {
-            var username = '{{ user.first_name|default_if_none:"" }}';
-            if (username) {
-                if (username.length > 10) {
-                    username = username.substring(0, 10) + '...';
-                }
-                usernameButton.textContent = username;
-                usernameButton.setAttribute('title', '{{ user.first_name }}');
-            } else {
-                usernameButton.style.display = 'none'; // Hide the button if no username
-            }
-        }
+        document.querySelectorAll('.add-to-wishlist').forEach(function(button) {
+            button.addEventListener('click', function() {
+                var movieId = this.getAttribute('data-movie-id');
+
+                {% if user.is_authenticated %}
+                    fetch("{% url 'users:add_to_wishlist' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({ movie_id: movieId })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Movie added to your wishlist');
+                        } else {
+                            alert('An error occurred: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred');
+                    });
+                {% else %}
+                    alert('You need to log in to add the movie to your wishlist');
+                {% endif %}
+            });
+        });
     });
     </script>
 </body>
