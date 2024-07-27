@@ -53,7 +53,7 @@
         .movie {
             display: flex;
             align-items: flex-start;
-            margin-top: 20px;
+            margin-top: 60px;
             position: relative;
         }
         .movie img {
@@ -93,10 +93,10 @@
             left: 60px; /* Adjust this value as needed to move the button towards the left */
         }
         .btn-watch-now {
-            bottom: 10%;
+            bottom: 30%;
             left: 0;
             width: 100%;
-            transform: translateY(10%);
+            transform: translateY(30%);
             padding: 8px 16px;
             max-width: 190px;
             background-color: rgba(255, 255, 255, 0.3);
@@ -113,6 +113,28 @@
         .movie-details {
             flex: 1;
             margin-left: 20px; /* Adjust for spacing between image and details */
+        }
+        .btn-thumbs-up,
+        .btn-thumbs-down {
+            background-color: transparent;
+            border: none;
+            color: #ef476f;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        .btn-thumbs-up:hover,
+        .btn-thumbs-down:hover {
+            color: #d6406c;
+        }
+        .movie-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Space between the buttons */
+            position: absolute;
+            bottom: -45px; /* Positioning from the bottom of the movie container */
+            left: 47px; /* Positioning from the left of the movie container */
+            z-index: 10;
         }
     </style>
 </head>
@@ -153,6 +175,10 @@
                                     <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}">
                                         <span class="icon">👁️</span> Watch Now
                                     </button>
+                                    <div class="movie-actions">
+                                        <button class="btn-thumbs-up" data-movie-id="{{ movie.id }}">👍</button>
+                                        <button class="btn-thumbs-down" data-movie-id="{{ movie.id }}">👎</button>
+                                    </div>
                                 </div>
                                 <div class="movie-details">
                                     <h4>{{ movie.title }}</h4>
