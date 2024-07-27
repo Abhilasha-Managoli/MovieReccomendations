@@ -16,3 +16,6 @@ class Favorites(models.Model):
 
     def __str__(self):
         return self.movie_title
+
+    class Meta:
+        verbose_name_plural = "Favorites"

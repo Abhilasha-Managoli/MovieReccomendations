@@ -69,6 +69,11 @@
                 </div>
                 <div id="favorites" style="display:none;">
                     <h2>Favorites</h2>
+                    <ul>
+                        {% for item in favorites %}
+                            <li>{{ item.movie_title }}</li>
+                        {% endfor %}
+                    </ul>
                 </div>
             </main>
         </div>

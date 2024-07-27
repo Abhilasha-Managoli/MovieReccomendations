@@ -10,5 +10,6 @@ urlpatterns = [
     path('recommendations/', views.recommendations, name='recommendations'),
     path('userinfo/', views.userinfo_view, name='userinfo'),
     path('add_to_wishlist/', views.add_to_wishlist, name='add_to_wishlist'),
+    path('add_to_favorites/', views.add_to_favorites, name="add_to_favorites"),
 
 ]
