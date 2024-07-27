@@ -33,12 +33,86 @@
             margin-top: 20px;
             border: none;
             border-radius: 0;
-            position: relative; /* This is needed for the absolute positioning of the button */
+            position: relative;
+            overflow: hidden;
         }
         .card img {
             max-width: 100%;
             height: auto;
             border-radius: 5px;
+            transition: opacity 0.3s ease;
+        }
+        .btn-overlay {
+            position: absolute;
+            background-color: transparent;
+            border: 2px solid white;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .card:hover img {
+            opacity: 0.5;
+        }
+        .card:hover .btn-overlay {
+            opacity: 1;
+        }
+        .btn-favorite,
+        .btn-watchlist,
+        .btn-watch-now {
+            border: 2px solid white;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+        }
+        .btn-favorite {
+            top: 10px;
+            left: 10px;
+        }
+        .btn-watchlist {
+            top: 10px;
+            right: 10px;
+        }
+        .btn-watch-now {
+            bottom: 50%;
+            left: 0;
+            right: 0;
+            transform: translateY(50%);
+            padding: 8px 16px;
+            background-color: rgba(255, 255, 255, 0.3); /* Initial background color with some transparency */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: white;
+            opacity: 0;
+            transition: opacity 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .btn-favorite:hover,
+        .btn-watchlist:hover,
+        .btn-watch-now:hover {
+            background-color: rgba(255, 255, 255, 0.5);
+            border-color: transparent;
+        }
+        .card:hover .btn-watch-now {
+            opacity: 1;
+        }
+        .btn-thumbs-up,
+        .btn-thumbs-down {
+            position: relative;
+            background-color: transparent;
+            border: none;
+            color: #ef476f;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        .btn-thumbs-up:hover,
+        .btn-thumbs-down:hover {
+            color: #d6406c;
         }
         .card-rating {
             font-size: 0.9rem;
@@ -49,14 +123,14 @@
             font-size: 1rem;
         }
         .btn-primary {
-            background-color: #ef476f; /* Pink */
+            background-color: #ef476f;
             border-color: #ef476f;
-            color: #ffffff; /* White text */
+            color: #ffffff;
             padding: 10px 20px;
             border-radius: 5px;
         }
         .btn-primary:hover {
-            background-color: #d6406c; /* Darker shade of pink for hover effect */
+            background-color: #d6406c;
             border-color: #d6406c;
         }
         .btn-secondary {
@@ -95,21 +169,6 @@
             max-width: 600px;
             margin: auto;
         }
-        .btn-overlay {
-            position: absolute;
-            top: 10px; /* Positioning from the top */
-            right: 10px; /* Positioning from the right */
-            background-color: #ef476f;
-            border: none;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            z-index: 10; /* Ensure it's on top of other content */
-        }
-        .btn-overlay:hover {
-            background-color: #d6406c;
-        }
         .logo-container {
             position: fixed;
             top: 0;
@@ -118,8 +177,8 @@
             z-index: 10;
         }
         .logo {
-        width:140px;
-        height:140px;
+            width: 140px;
+            height: 140px;
         }
     </style>
 </head>
@@ -128,8 +187,7 @@
         <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo">
     </div>
     <div class="container">
-        <div class="text-center mb-4">
-        </div>
+        <div class="text-center mb-4"></div>
         <div class="row mb-4">
             {% if user.is_authenticated %}
                 <div class="col-auto">
@@ -165,7 +223,15 @@
                         <div class="col-md-2 mb-4">
                             <div class="card">
                                 <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
-                                <button class="btn-overlay add-to-wishlist" data-movie-id="{{ movie.id }}">+</button>
+                                <button class="btn-overlay btn-favorite" data-movie-id="{{ movie.id }}">💟</button>
+                                <button class="btn-overlay btn-watchlist" data-movie-id="{{ movie.id }}">➕</button>
+                                <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}">
+                                    <span class="icon">👁️</span> Watch Now
+                                </button>
+                                <div class="text-center mt-2">
+                                    <button class="btn-thumbs-up" data-movie-id="{{ movie.id }}">👍</button>
+                                    <button class="btn-thumbs-down" data-movie-id="{{ movie.id }}">👎</button>
+                                </div>
                                 <h5 class="card-title">{{ movie.title }}</h5>
                                 <p class="card-rating">Rating: {{ movie.vote_average|floatformat:1 }}</p>
                             </div>
@@ -178,7 +244,7 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.add-to-wishlist').forEach(function(button) {
+        document.querySelectorAll('.btn-overlay').forEach(function(button) {
             button.addEventListener('click', function() {
                 var movieId = this.getAttribute('data-movie-id');
 
@@ -194,17 +260,17 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            alert('Movie added to your wishlist');
+                            alert('Action completed successfully');
                         } else {
                             alert('An error occurred: ' + data.message);
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        alert('An error occurred');
+                        alert('An error occurred.');
                     });
                 {% else %}
-                    alert('You need to log in to add the movie to your wishlist');
+                    alert('Please log in to perform this action.');
                 {% endif %}
             });
         });
