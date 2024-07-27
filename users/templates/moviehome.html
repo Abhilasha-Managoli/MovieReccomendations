@@ -45,9 +45,6 @@
             background-color: #ffc43d;
             border-color: #ffc43d;
             color: #ffffff;
-            position: absolute;
-            top: 10px;
-            right: 10px;
         }
         .btn-secondary:hover {
             background-color: #e0b837;
@@ -55,12 +52,67 @@
         }
         .movie {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             margin-top: 20px;
+            position: relative;
         }
         .movie img {
-            max-width: 100px;
+            width: 100%;
+            max-width: 190px;
+            height: auto;
+            max-height: 275px;
             margin-right: 20px;
+            transition: opacity 0.3s ease;
+            display: block;
+            position: relative;
+        }
+        .btn-overlay {
+            position: absolute;
+            background-color: transparent;
+            border: 2px solid white;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .movie:hover img {
+            opacity: 0.5;
+        }
+        .movie:hover .btn-overlay {
+            opacity: 1;
+        }
+        .btn-favorite {
+            top: 10px;
+            left: 10px;
+        }
+        .btn-watchlist {
+            top: 10px;
+            left: 60px; /* Adjust this value as needed to move the button towards the left */
+        }
+        .btn-watch-now {
+            bottom: 10%;
+            left: 0;
+            width: 100%;
+            transform: translateY(10%);
+            padding: 8px 16px;
+            max-width: 190px;
+            background-color: rgba(255, 255, 255, 0.3);
+            text-align: center;
+            border-radius: 0 0 5px 5px;
+            transition: opacity 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .btn-favorite:hover,
+        .btn-watchlist:hover,
+        .btn-watch-now:hover {
+            background-color: rgba(255, 255, 255, 0.5);
+            border-color: transparent;
+        }
+        .movie-details {
+            flex: 1;
+            margin-left: 20px; /* Adjust for spacing between image and details */
         }
     </style>
 </head>
@@ -94,8 +146,15 @@
                         <h3>Search Results:</h3>
                         {% for movie in movies %}
                             <div class="movie">
-                                <img src="https://image.tmdb.org/t/p/w200{{ movie.poster_path }}" alt="{{ movie.title }} poster">
-                                <div>
+                                <div style="position: relative;">
+                                    <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }} poster">
+                                    <button class="btn-overlay btn-favorite" data-movie-id="{{ movie.id }}">💟</button>
+                                    <button class="btn-overlay btn-watchlist" data-movie-id="{{ movie.id }}">➕</button>
+                                    <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}">
+                                        <span class="icon">👁️</span> Watch Now
+                                    </button>
+                                </div>
+                                <div class="movie-details">
                                     <h4>{{ movie.title }}</h4>
                                     <p>Rating: {{ movie.vote_average|floatformat:1 }}</p>
                                     <p>Genres: {{ movie.genre_names|join:", " }}</p>

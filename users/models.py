@@ -8,3 +8,11 @@ class Wishlist(models.Model):
 
     def __str__(self):
         return self.movie_title
+
+
+class Favorites(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    movie_title = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.movie_title
