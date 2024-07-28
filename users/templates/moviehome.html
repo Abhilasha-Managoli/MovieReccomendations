@@ -200,46 +200,68 @@
         </div>
     </div>
 
-    <script>
+        <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+
+        function addToWishlist(movieTitle) {
+            $.ajax({
+                type: 'POST',
+                url: '{% url "users:add_to_wishlist" %}',
+                data: JSON.stringify({'movie_title': movieTitle}),
+                contentType: 'application/json; charset=utf-8',
+                headers: {'X-CSRFToken': csrftoken},
+                success: function(response) {
+                    alert(response.message);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error details:", xhr.responseText);
+                    alert('Failed to add movie to watchlist. ' + xhr.responseText);
+                }
+            });
+        }
+
+        function addToFavorites(movieTitle) {
+            $.ajax({
+                type: 'POST',
+                url: '{% url "users:add_to_favorites" %}',
+                data: JSON.stringify({'movie_title': movieTitle}),
+                contentType: 'application/json; charset=utf-8',
+                headers: {'X-CSRFToken': csrftoken},
+                success: function(response) {
+                    alert(response.message);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error details:", xhr.responseText);
+                    alert('Failed to add movie to favorites. ' + xhr.responseText);
+                }
+            });
+        }
+
         $(document).ready(function() {
             $('.btn-watchlist').click(function() {
-                var movieId = $(this).data('movie-id');
                 var movieTitle = $(this).closest('.movie').find('h4').text();
-
-                $.ajax({
-                    type: 'POST',
-                    url: '{% url "users:add_to_wishlist" %}',
-                    data: {
-                        'movie_title': movieTitle,
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
-                    },
-                    success: function(response) {
-                        alert('Movie added to watchlist!');
-                    },
-                    error: function(xhr, status, error) {
-                        alert('Failed to add movie to watchlist.');
-                    }
-                });
+                addToWishlist(movieTitle);
             });
 
             $('.btn-favorite').click(function() {
-                var movieId = $(this).data('movie-id');
                 var movieTitle = $(this).closest('.movie').find('h4').text();
-
-                $.ajax({
-                    type: 'POST',
-                    url: '{% url "users:add_to_favorites" %}',
-                    data: {
-                        'movie_title': movieTitle,
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
-                    },
-                    success: function(response) {
-                        alert('Movie added to favorites!');
-                    },
-                    error: function(xhr, status, error) {
-                        alert('Failed to add movie to favorites.');
-                    }
-                });
+                addToFavorites(movieTitle);
             });
         });
     </script>

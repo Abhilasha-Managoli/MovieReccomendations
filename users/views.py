@@ -5,7 +5,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from users.models import Wishlist, Favorites
 
 API_KEY = "6d9d64446aa322b6e954111c63b34344"
@@ -108,7 +108,7 @@ def recommendations(request):
 
 
 @login_required
-@csrf_exempt
+@csrf_protect
 def add_to_wishlist(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -119,7 +119,7 @@ def add_to_wishlist(request):
 
 
 @login_required
-@csrf_exempt
+@csrf_protect
 def add_to_favorites(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -146,6 +146,7 @@ def autocomplete(request):
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse([], safe=False)
+
 
 def search_results(request):
     query = request.GET.get('query', '')
