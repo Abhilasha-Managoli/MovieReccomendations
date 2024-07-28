@@ -365,13 +365,13 @@
 
                 $(document).on("click", ".autocomplete-suggestion", function() {
                     var movieId = $(this).data("movie-id");
-                    window.location.href = "{% url 'users:search_results' %}?movie_id=" + movieId;
+                    window.location.href = "{% url 'users:recommendations' %}?movie_id=" + movieId;
                 });
 
                 $("#search-button").click(function() {
                     var query = $("#search-input").val();
                     if (query) {
-                        window.location.href = "{% url 'users:search_results' %}?query=" + encodeURIComponent(query);
+                        window.location.href = "{% url 'users:recommendations' %}?query=" + encodeURIComponent(query);
                     }
                 });
 
