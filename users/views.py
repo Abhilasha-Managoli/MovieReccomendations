@@ -1,3 +1,5 @@
+import json
+
 import requests
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
@@ -109,7 +111,8 @@ def recommendations(request):
 @csrf_exempt
 def add_to_wishlist(request):
     if request.method == 'POST':
-        movie_title = request.POST.get('movie_title')
+        data = json.loads(request.body)
+        movie_title = data.get('movie_title')
         Wishlist.objects.create(user=request.user, movie_title=movie_title)
         return JsonResponse({'success': True, 'message': 'Movie added to watchlist!'})
     return HttpResponse(status=405)
@@ -119,7 +122,41 @@ def add_to_wishlist(request):
 @csrf_exempt
 def add_to_favorites(request):
     if request.method == 'POST':
-        movie_title = request.POST.get('movie_title')
+        data = json.loads(request.body)
+        movie_title = data.get('movie_title')
         Favorites.objects.create(user=request.user, movie_title=movie_title)
         return JsonResponse({'success': True, 'message': 'Movie added to favorites!'})
     return HttpResponse(status=405)
+
+
+def autocomplete(request):
+    if 'term' in request.GET:
+        query = request.GET['term']
+        url_search = 'https://api.themoviedb.org/3/search/multi'
+        params = {'api_key': API_KEY, 'query': query, 'language': 'en-US'}
+
+        try:
+            response = requests.get(url_search, params=params)
+            response.raise_for_status()
+            results = response.json().get('results', [])
+            movies = [{'id': item['id'], 'title': item.get('title') or item.get('name')} for item in results if
+                      item.get('media_type') == 'movie']
+            return JsonResponse(movies, safe=False)
+        except requests.exceptions.RequestException as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return JsonResponse([], safe=False)
+
+def search_results(request):
+    query = request.GET.get('query', '')
+    url_search = 'https://api.themoviedb.org/3/search/multi'
+    params = {'api_key': API_KEY, 'query': query, 'language': 'en-US'}
+
+    try:
+        response = requests.get(url_search, params=params)
+        response.raise_for_status()
+        results = response.json().get('results', [])
+        movies = [item for item in results if item.get('media_type') == 'movie']
+        return render(request, 'search_results.html', {'movies': movies, 'query': query})
+    except requests.exceptions.RequestException as e:
+        return HttpResponse(f"An error occurred: {e}", status=500)

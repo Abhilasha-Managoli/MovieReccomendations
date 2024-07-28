@@ -7,6 +7,7 @@
     <title>Movie Recommendations</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <style>
         body {
             background-color: #f8ffe5;
@@ -15,6 +16,7 @@
             margin: 0;
             padding: 0;
             height: 100vh;
+            padding-top: 60px;
         }
         .jumbotron {
             background-color: #f8ffe5;
@@ -74,7 +76,7 @@
         }
         .btn-watchlist {
             top: 10px;
-            left: 60px; /* Adjust this value as needed to move the button towards the left */
+            left: 60px;
         }
         .btn-watch-now {
             bottom: 50%;
@@ -138,22 +140,24 @@
             border-color: #ffc43d;
             color: #ffffff;
             position: fixed;
-            top: 0;
+            top: 30px;
             right: 10px;
             padding: 6px 10px;
+            z-index: 1000;
         }
         .btn-secondary-2 {
             background-color: #ffc43d;
             border-color: #ffc43d;
             color: #ffffff;
             position: fixed;
-            top: 0;
+            top: 30px;
             right: 100px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: calc(100% - 130px);
             padding: 6px 10px;
+            z-index: 1000;
         }
         .btn-secondary:hover {
             background-color: #e0b837;
@@ -171,21 +175,66 @@
         }
         .logo-container {
             position: fixed;
-            top: 0;
-            left: 0;
+            top: 2px;
+            left: 150px;
             padding: 10px;
-            z-index: 10;
+            z-index: 1001;
+            background-color: #f8ffe5;
+            width: 140px;
+            height:60px;
+            margin: 0;
+            display: flex;
         }
         .logo {
-            width: 140px;
-            height: 140px;
+            width: 110px;
+            height: 90px;
         }
+        .search-bar {
+            position: fixed;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            background-color: #f8ffe5;
+            border-bottom: 1px solid #ccc;
+            padding: 10px;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: none;
+        }
+        .search-bar input {
+            width: 100%;
+            max-width: 600px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        .search-bar button {
+            padding: 10px 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #ef476f;
+            color: white;
+            cursor: pointer;
+        }
+        .search-bar button:hover {
+            background-color: #d6406c;
+        }
+
     </style>
 </head>
 <body>
     <div class="logo-container">
         <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo">
     </div>
+     <div class="search-bar">
+         <input type="text" placeholder="Search for movies..." id="search-input">
+         <button id="search-button">Search</button>
+         <ul id="autocomplete-results" class="list-group" style="display: none; position: absolute; z-index: 1000;"></ul>
+    </div>
+
     <div class="container">
         <div class="text-center mb-4"></div>
         <div class="row mb-4">
@@ -204,7 +253,7 @@
         </div>
 
         <div class="jumbotron">
-            <h1 class="display-4">Movie Recommendations</h1>
+            <h1 class="display-4">Popcorn Picks</h1>
         </div>
 
         <div class="text-center mt-1 mb-4">
@@ -212,7 +261,7 @@
         </div>
 
         <div class="text-center mb-4">
-            <a href="{% url 'users:movie_recommendation' %}" class="btn btn-primary">Continue to Movie Recommendations</a>
+            <a href="{% url 'users:movie_recommendation' %}" class="btn btn-primary">Continue to Popcorn Picks</a>
         </div>
 
         <div class="row mt-4">
@@ -223,9 +272,9 @@
                         <div class="col-md-2 mb-4">
                             <div class="card">
                                 <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
-                                <button class="btn-overlay btn-favorite" data-movie-id="{{ movie.id }}">💟</button>
-                                <button class="btn-overlay btn-watchlist" data-movie-id="{{ movie.id }}">➕</button>
-                                <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}">
+                                <button class="btn-overlay btn-favorite" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}">💟</button>
+                                <button class="btn-overlay btn-watchlist" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}">➕</button>
+                                <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}">
                                     <span class="icon">👁️</span> Watch Now
                                 </button>
                                 <div class="text-center mt-2">
@@ -242,25 +291,30 @@
         </div>
     </div>
 
-    <script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
     document.addEventListener('DOMContentLoaded', function() {
+        var isAuthenticated = '{{ user.is_authenticated|yesno:"true,false" }}' === 'true';
+
         document.querySelectorAll('.btn-overlay').forEach(function(button) {
             button.addEventListener('click', function() {
                 var movieId = this.getAttribute('data-movie-id');
+                var movieTitle = this.getAttribute('data-movie-title');
+                var action = this.classList.contains('btn-watchlist') ? 'add_to_wishlist' : 'add_to_favorites';
 
-                {% if user.is_authenticated %}
+                if (isAuthenticated) {
                     fetch("{% url 'users:add_to_wishlist' %}", {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRFToken': '{{ csrf_token }}'
                         },
-                        body: JSON.stringify({ movie_id: movieId })
+                        body: JSON.stringify({ movie_title: movieTitle })
                     })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            alert('Action completed successfully');
+                            alert('Movie added to watchlist successfully');
                         } else {
                             alert('An error occurred: ' + data.message);
                         }
@@ -269,13 +323,62 @@
                         console.error('Error:', error);
                         alert('An error occurred.');
                     });
-                {% else %}
+                } else {
                     alert('Please log in to perform this action.');
-                {% endif %}
+                }
+            });
+        });
+
+        $(document).ready(function() {
+            $("#search-input").on("input", function() {
+                var query = $(this).val();
+                if (query.length < 2) {
+                    $("#autocomplete-container").hide();
+                    return;
+                }
+                $.ajax({
+                    url: "{% url 'users:autocomplete' %}",
+                    dataType: "json",
+                    data: {
+                        term: query
+                    },
+                    success: function(data) {
+                        $("#autocomplete-container").empty();
+                        if (data.length) {
+                            $.each(data, function(index, movie) {
+                                $("#autocomplete-container").append(
+                                    `<div class="autocomplete-suggestion" data-movie-id="${movie.id}">${movie.title}</div>`
+                                );
+                            });
+                            $("#autocomplete-container").show();
+                        } else {
+                            $("#autocomplete-container").hide();
+                        }
+                    }
+                });
+            });
+
+            $(document).on("click", ".autocomplete-suggestion", function() {
+                var movieId = $(this).data("movie-id");
+                window.location.href = "{% url 'users:search_results' %}?movie_id=" + movieId;
+            });
+
+            $("#search-button").click(function() {
+                var query = $("#search-input").val();
+                if (query) {
+                    window.location.href = "{% url 'users:search_results' %}?query=" + encodeURIComponent(query);
+                }
+            });
+
+            $(document).click(function(event) {
+                if (!$(event.target).closest('#search-input, #autocomplete-container').length) {
+                    $("#autocomplete-container").hide();
+                }
             });
         });
     });
-    </script>
+</script>
+
 </body>
 </html>
 

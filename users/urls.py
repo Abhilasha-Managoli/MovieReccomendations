@@ -11,5 +11,6 @@ urlpatterns = [
     path('userinfo/', views.userinfo_view, name='userinfo'),
     path('add_to_wishlist/', views.add_to_wishlist, name='add_to_wishlist'),
     path('add_to_favorites/', views.add_to_favorites, name="add_to_favorites"),
-
+    path('autocomplete/', views.autocomplete, name='autocomplete'),
+    path('search_results/', views.search_results, name='search_results'),
 ]
