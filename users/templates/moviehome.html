@@ -32,6 +32,7 @@
             border: none;
             border-radius: 0;
         }
+
         .form-control {
             border-color: #1b9aaa;
         }
@@ -219,11 +220,6 @@
     </div>
 
     <div class="container">
-        <div class="jumbotron">
-            <h1 class="display-4">Movie Recommendations</h1>
-            <p class="lead">Welcome back, {{ user_name }}!</p>
-        </div>
-
         {% if success_message %}
             <div class="alert alert-success" role="alert">
                 {{ success_message }}

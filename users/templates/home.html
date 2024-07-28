@@ -222,6 +222,30 @@
         .search-bar button:hover {
             background-color: #d6406c;
         }
+        #autocomplete-results {
+            position: absolute;
+            margin-left: auto;
+            margin-right: auto;
+            top: 70px;
+            width: 50%;
+            background-color: #f8ffe5;
+            border-bottom: 1px solid #ccc;
+            padding: 10px;
+            z-index: 1000;
+            display: none;
+            border-bottom: none;
+        }
+        #autocomplete-results .list-group-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            cursor: pointer;
+        }
+        #autocomplete-results .list-group-item img {
+            width: 50px;
+            height: auto;
+            margin-right: 10px;
+        }
 
     </style>
 </head>
@@ -232,7 +256,7 @@
      <div class="search-bar">
          <input type="text" placeholder="Search for movies..." id="search-input">
          <button id="search-button">Search</button>
-         <ul id="autocomplete-results" class="list-group" style="display: none; position: absolute; z-index: 1000;"></ul>
+         <ul id="autocomplete-results" class="list-group"></ul>
     </div>
 
     <div class="container">
@@ -293,7 +317,7 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        $(document).ready(function() {
             var isAuthenticated = '{{ user.is_authenticated|yesno:"true,false" }}' === 'true';
 
             document.querySelectorAll('.btn-overlay').forEach(function(button) {
@@ -334,52 +358,53 @@
                 });
             });
 
-            $(document).ready(function() {
-                $("#search-input").on("input", function() {
-                    var query = $(this).val();
-                    if (query.length < 2) {
-                        $("#autocomplete-container").hide();
-                        return;
-                    }
-                    $.ajax({
-                        url: "{% url 'users:autocomplete' %}",
-                        dataType: "json",
-                        data: {
-                            term: query
-                        },
-                        success: function(data) {
-                            $("#autocomplete-container").empty();
-                            if (data.length) {
-                                $.each(data, function(index, movie) {
-                                    $("#autocomplete-container").append(
-                                        `<div class="autocomplete-suggestion" data-movie-id="${movie.id}">${movie.title}</div>`
-                                    );
-                                });
-                                $("#autocomplete-container").show();
-                            } else {
-                                $("#autocomplete-container").hide();
-                            }
+            $("#search-input").on("input", function() {
+                var query = $(this).val();
+                if (query.length < 2) {
+                    $("#autocomplete-results").hide(); // Hide results if input is too short
+                    return;
+                }
+                $.ajax({
+                    url: "{% url 'users:autocomplete' %}",
+                    dataType: "json",
+                    data: {
+                        term: query
+                    },
+                    success: function(data) {
+                        $("#autocomplete-results").empty(); // Clear previous results
+                        if (data.length) {
+                            $.each(data, function(index, movie) {
+                                $("#autocomplete-results").append(
+                                    `<li class="list-group-item autocomplete-suggestion" data-movie-id="${movie.id}">
+                                    <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" alt="${movie.title}">
+                                    ${movie.title}
+                                    </li>`
+                                );
+                            });
+                            $("#autocomplete-results").show();
+                        } else {
+                            $("#autocomplete-results").hide();
                         }
-                    });
-                });
-
-                $(document).on("click", ".autocomplete-suggestion", function() {
-                    var movieId = $(this).data("movie-id");
-                    window.location.href = "{% url 'users:recommendations' %}?movie_id=" + movieId;
-                });
-
-                $("#search-button").click(function() {
-                    var query = $("#search-input").val();
-                    if (query) {
-                        window.location.href = "{% url 'users:recommendations' %}?query=" + encodeURIComponent(query);
                     }
                 });
+            });
 
-                $(document).click(function(event) {
-                    if (!$(event.target).closest('#search-input, #autocomplete-container').length) {
-                        $("#autocomplete-container").hide();
-                    }
-                });
+            $(document).on("click", ".autocomplete-suggestion", function() {
+                var movieId = $(this).data("movie-id");
+                window.location.href = "{% url 'users:recommendations' %}?movie_id=" + movieId;
+            });
+
+            $("#search-button").click(function() {
+                var query = $("#search-input").val();
+                if (query) {
+                    window.location.href = "{% url 'users:recommendations' %}?query=" + encodeURIComponent(query);
+                }
+            });
+
+            $(document).click(function(event) {
+                if (!$(event.target).closest('#search-input, #autocomplete-results').length) {
+                    $("#autocomplete-results").hide(); // Hide results if clicking outside
+                }
             });
         });
     </script>
