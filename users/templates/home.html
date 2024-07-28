@@ -272,9 +272,9 @@
                         <div class="col-md-2 mb-4">
                             <div class="card">
                                 <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
-                                <button class="btn-overlay btn-favorite" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}">💟</button>
-                                <button class="btn-overlay btn-watchlist" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}">➕</button>
-                                <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}">
+                                <button class="btn-overlay btn-favorite" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}" data-action="add_to_favorites">💟</button>
+                                <button class="btn-overlay btn-watchlist" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}" data-action="add_to_watchlist">➕</button>
+                                <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}" data-action="watch_now">
                                     <span class="icon">👁️</span> Watch Now
                                 </button>
                                 <div class="text-center mt-2">
@@ -292,93 +292,98 @@
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var isAuthenticated = '{{ user.is_authenticated|yesno:"true,false" }}' === 'true';
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var isAuthenticated = '{{ user.is_authenticated|yesno:"true,false" }}' === 'true';
 
-        document.querySelectorAll('.btn-overlay').forEach(function(button) {
-            button.addEventListener('click', function() {
-                var movieId = this.getAttribute('data-movie-id');
-                var movieTitle = this.getAttribute('data-movie-title');
-                var action = this.classList.contains('btn-watchlist') ? 'add_to_wishlist' : 'add_to_favorites';
+            document.querySelectorAll('.btn-overlay').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    var movieId = this.getAttribute('data-movie-id');
+                    var movieTitle = this.getAttribute('data-movie-title');
+                    var action = this.getAttribute('data-action');
 
-                if (isAuthenticated) {
-                    fetch("{% url 'users:add_to_wishlist' %}", {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': '{{ csrf_token }}'
-                        },
-                        body: JSON.stringify({ movie_title: movieTitle })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('Movie added to watchlist successfully');
-                        } else {
-                            alert('An error occurred: ' + data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('An error occurred.');
-                    });
-                } else {
-                    alert('Please log in to perform this action.');
-                }
-            });
-        });
+                    if (isAuthenticated) {
+                        var url = action === 'add_to_favorites' ? "{% url 'users:add_to_favorites' %}" : "{% url 'users:add_to_wishlist' %}";
+                        var message = action === 'add_to_favorites' ? 'Movie added to favorites successfully' : 'Movie added to watchlist successfully';
 
-        $(document).ready(function() {
-            $("#search-input").on("input", function() {
-                var query = $(this).val();
-                if (query.length < 2) {
-                    $("#autocomplete-container").hide();
-                    return;
-                }
-                $.ajax({
-                    url: "{% url 'users:autocomplete' %}",
-                    dataType: "json",
-                    data: {
-                        term: query
-                    },
-                    success: function(data) {
-                        $("#autocomplete-container").empty();
-                        if (data.length) {
-                            $.each(data, function(index, movie) {
-                                $("#autocomplete-container").append(
-                                    `<div class="autocomplete-suggestion" data-movie-id="${movie.id}">${movie.title}</div>`
-                                );
-                            });
-                            $("#autocomplete-container").show();
-                        } else {
-                            $("#autocomplete-container").hide();
-                        }
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({ movie_title: movieTitle })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                if (action !== 'watch_now') {
+                                    alert(message);
+                                }
+                            } else {
+                                alert('An error occurred: ' + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('An error occurred.');
+                        });
+                    } else {
+                        alert('Please log in to perform this action.');
                     }
                 });
             });
 
-            $(document).on("click", ".autocomplete-suggestion", function() {
-                var movieId = $(this).data("movie-id");
-                window.location.href = "{% url 'users:search_results' %}?movie_id=" + movieId;
-            });
+            $(document).ready(function() {
+                $("#search-input").on("input", function() {
+                    var query = $(this).val();
+                    if (query.length < 2) {
+                        $("#autocomplete-container").hide();
+                        return;
+                    }
+                    $.ajax({
+                        url: "{% url 'users:autocomplete' %}",
+                        dataType: "json",
+                        data: {
+                            term: query
+                        },
+                        success: function(data) {
+                            $("#autocomplete-container").empty();
+                            if (data.length) {
+                                $.each(data, function(index, movie) {
+                                    $("#autocomplete-container").append(
+                                        `<div class="autocomplete-suggestion" data-movie-id="${movie.id}">${movie.title}</div>`
+                                    );
+                                });
+                                $("#autocomplete-container").show();
+                            } else {
+                                $("#autocomplete-container").hide();
+                            }
+                        }
+                    });
+                });
 
-            $("#search-button").click(function() {
-                var query = $("#search-input").val();
-                if (query) {
-                    window.location.href = "{% url 'users:search_results' %}?query=" + encodeURIComponent(query);
-                }
-            });
+                $(document).on("click", ".autocomplete-suggestion", function() {
+                    var movieId = $(this).data("movie-id");
+                    window.location.href = "{% url 'users:search_results' %}?movie_id=" + movieId;
+                });
 
-            $(document).click(function(event) {
-                if (!$(event.target).closest('#search-input, #autocomplete-container').length) {
-                    $("#autocomplete-container").hide();
-                }
+                $("#search-button").click(function() {
+                    var query = $("#search-input").val();
+                    if (query) {
+                        window.location.href = "{% url 'users:search_results' %}?query=" + encodeURIComponent(query);
+                    }
+                });
+
+                $(document).click(function(event) {
+                    if (!$(event.target).closest('#search-input, #autocomplete-container').length) {
+                        $("#autocomplete-container").hide();
+                    }
+                });
             });
         });
-    });
-</script>
-
+    </script>
 </body>
 </html>
+
 
