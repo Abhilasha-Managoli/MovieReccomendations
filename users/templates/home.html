@@ -317,16 +317,52 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        $(document).ready(function() {
-            var isAuthenticated = '{{ user.is_authenticated|yesno:"true,false" }}' === 'true';
+    $(document).ready(function() {
+        var isAuthenticated = '{{ user.is_authenticated|yesno:"true,false" }}' === 'true';
 
-            document.querySelectorAll('.btn-overlay').forEach(function(button) {
-                button.addEventListener('click', function() {
-                    var movieId = this.getAttribute('data-movie-id');
-                    var movieTitle = this.getAttribute('data-movie-title');
-                    var action = this.getAttribute('data-action');
+        document.querySelectorAll('.btn-overlay').forEach(function(button) {
+            button.addEventListener('click', function() {
+                var movieId = this.getAttribute('data-movie-id');
+                var movieTitle = this.getAttribute('data-movie-title');
+                var action = this.getAttribute('data-action');
 
-                    if (isAuthenticated) {
+                if (isAuthenticated) {
+                    if (action === 'watch_now') {
+                        $.ajax({
+                            url: "{% url 'users:get_streaming_url' %}",
+                            method: "POST",
+                            data: JSON.stringify({ movie_title: movieTitle }),
+                            contentType: "application/json",
+                            headers: { "X-CSRFToken": "{{ csrf_token }}" },
+                            success: function(response) {
+                                if (response.success) {
+                                    var servicesAvailable = {
+                                        netflix: response.netflix_url,
+                                        amazon: response.amazon_url
+                                    };
+
+                                    if (servicesAvailable.netflix || servicesAvailable.amazon) {
+                                        // Show choice dialog if at least one service is available
+                                        var choice = prompt("Choose a streaming service:\n1. Netflix\n2. Amazon Prime", "1");
+                                        if (choice === '1' && servicesAvailable.netflix) {
+                                            window.location.href = servicesAvailable.netflix; // Redirect to Netflix
+                                        } else if (choice === '2' && servicesAvailable.amazon) {
+                                            window.location.href = servicesAvailable.amazon; // Redirect to Amazon Prime
+                                        } else {
+                                            alert('Invalid choice or service not available. Please try again.');
+                                        }
+                                    } else {
+                                        alert('Streaming service is unavailable.');
+                                    }
+                                } else {
+                                    alert('Streaming link not found.');
+                                }
+                            },
+                            error: function() {
+                                alert('An error occurred.');
+                            }
+                        });
+                    } else {
                         var url = action === 'add_to_favorites' ? "{% url 'users:add_to_favorites' %}" : "{% url 'users:add_to_wishlist' %}";
                         var message = action === 'add_to_favorites' ? 'Movie added to favorites successfully' : 'Movie added to watchlist successfully';
 
@@ -341,9 +377,7 @@
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                if (action !== 'watch_now') {
-                                    alert(message);
-                                }
+                                alert(message);
                             } else {
                                 alert('An error occurred: ' + data.message);
                             }
@@ -352,63 +386,65 @@
                             console.error('Error:', error);
                             alert('An error occurred.');
                         });
-                    } else {
-                        alert('Please log in to perform this action.');
                     }
-                });
-            });
-
-            $("#search-input").on("input", function() {
-                var query = $(this).val();
-                if (query.length < 2) {
-                    $("#autocomplete-results").hide(); // Hide results if input is too short
-                    return;
-                }
-                $.ajax({
-                    url: "{% url 'users:autocomplete' %}",
-                    dataType: "json",
-                    data: {
-                        term: query
-                    },
-                    success: function(data) {
-                        $("#autocomplete-results").empty(); // Clear previous results
-                        if (data.length) {
-                            $.each(data, function(index, movie) {
-                                $("#autocomplete-results").append(
-                                    `<li class="list-group-item autocomplete-suggestion" data-movie-id="${movie.id}">
-                                    <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" alt="${movie.title}">
-                                    ${movie.title}
-                                    </li>`
-                                );
-                            });
-                            $("#autocomplete-results").show();
-                        } else {
-                            $("#autocomplete-results").hide();
-                        }
-                    }
-                });
-            });
-
-            $(document).on("click", ".autocomplete-suggestion", function() {
-                var movieId = $(this).data("movie-id");
-                window.location.href = "{% url 'users:recommendations' %}?movie_id=" + movieId;
-            });
-
-            $("#search-button").click(function() {
-                var query = $("#search-input").val();
-                if (query) {
-                    window.location.href = "{% url 'users:recommendations' %}?query=" + encodeURIComponent(query);
-                }
-            });
-
-            $(document).click(function(event) {
-                if (!$(event.target).closest('#search-input, #autocomplete-results').length) {
-                    $("#autocomplete-results").hide(); // Hide results if clicking outside
+                } else {
+                    alert('Please log in to perform this action.');
                 }
             });
         });
+
+        $("#search-input").on("input", function() {
+            var query = $(this).val();
+            if (query.length < 2) {
+                $("#autocomplete-results").hide(); // Hide results if input is too short
+                return;
+            }
+            $.ajax({
+                url: "{% url 'users:autocomplete' %}",
+                dataType: "json",
+                data: {
+                    term: query
+                },
+                success: function(data) {
+                    $("#autocomplete-results").empty(); // Clear previous results
+                    if (data.length) {
+                        $.each(data, function(index, movie) {
+                            $("#autocomplete-results").append(
+                                `<li class="list-group-item autocomplete-suggestion" data-movie-id="${movie.id}">
+                                <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" alt="${movie.title}">
+                                ${movie.title}
+                                </li>`
+                            );
+                        });
+                        $("#autocomplete-results").show();
+                    } else {
+                        $("#autocomplete-results").hide();
+                    }
+                }
+            });
+        });
+
+        $(document).on("click", ".autocomplete-suggestion", function() {
+            var movieId = $(this).data("movie-id");
+            window.location.href = "{% url 'users:recommendations' %}?movie_id=" + movieId;
+        });
+
+        $("#search-button").click(function() {
+            var query = $("#search-input").val();
+            if (query) {
+                window.location.href = "{% url 'users:recommendations' %}?query=" + encodeURIComponent(query);
+            }
+        });
+
+        $(document).click(function(event) {
+            if (!$(event.target).closest('#search-input, #autocomplete-results').length) {
+                $("#autocomplete-results").hide(); // Hide results if clicking outside
+            }
+        });
+    });
     </script>
 </body>
 </html>
+
 
 

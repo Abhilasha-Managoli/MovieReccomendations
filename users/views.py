@@ -8,6 +8,7 @@ from django.contrib.auth import logout
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from users.models import Wishlist, Favorites
 
+
 API_KEY = "6d9d64446aa322b6e954111c63b34344"
 
 
@@ -161,3 +162,39 @@ def search_results(request):
         return render(request, 'search_results.html', {'movies': movies, 'query': query})
     except requests.exceptions.RequestException as e:
         return HttpResponse(f"An error occurred: {e}", status=500)
+
+
+def get_streaming_url(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            movie_title = data.get('movie_title')
+
+            search_url = f"https://api.themoviedb.org/3/search/movie?api_key={API_KEY}&query={movie_title}"
+            response = requests.get(search_url)
+
+            if response.status_code == 200:
+                results = response.json()
+                items = results.get('results', [])
+
+                urls = {
+                    'netflix': None,
+                    'amazon_prime': None
+                }
+
+                for item in items:
+                    if item['title'].lower() == movie_title.lower():
+                        # Construct URLs
+                        urls['netflix'] = f"https://www.netflix.com/search?q={movie_title.replace(' ', '%20')}"
+                        urls['amazon_prime'] = f"https://www.amazon.com/s?k={movie_title.replace(' ', '+')}"
+                        break
+
+                return JsonResponse({'success': True, 'urls': urls})
+
+            return JsonResponse({'success': False, 'message': 'No streaming link found.'})
+
+        except Exception as e:
+            print(f"Exception: {str(e)}")
+            return JsonResponse({'success': False, 'message': str(e)})
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'})

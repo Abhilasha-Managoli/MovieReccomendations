@@ -12,4 +12,6 @@ urlpatterns = [
     path('add_to_wishlist/', views.add_to_wishlist, name='add_to_wishlist'),
     path('add_to_favorites/', views.add_to_favorites, name="add_to_favorites"),
     path('autocomplete/', views.autocomplete, name='autocomplete'),
+    path('get_streaming_url/', views.get_streaming_url, name='get_streaming_url'),
+
 ]

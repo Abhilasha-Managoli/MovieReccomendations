@@ -262,89 +262,122 @@
     </div>
 
     <script>
-        // CSRF Token Setup
-        $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
-                function getCookie(name) {
-                    let cookieValue = null;
-                    if (document.cookie && document.cookie !== '') {
-                        const cookies = document.cookie.split(';');
-                        for (let i = 0; i < cookies.length; i++) {
-                            const cookie = cookies[i].trim();
-                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                                break;
-                            }
+    // CSRF Token Setup
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
                         }
                     }
-                    return cookieValue;
                 }
+                return cookieValue;
+            }
 
-                const csrftoken = getCookie('csrftoken');
-                if (!csrftoken) {
-                    return;
-                }
+            const csrftoken = getCookie('csrftoken');
+            if (!csrftoken) {
+                return;
+            }
 
-                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    });
+
+    // Add to Favorites AJAX
+    $('.btn-favorite').click(function() {
+        var movieTitle = $(this).closest('.movie').find('.movie-details h4').text();
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'users:add_to_favorites' %}",
+            data: JSON.stringify({ 'movie_title': movieTitle }),
+            contentType: 'application/json',
+            success: function(response) {
+                alert(response.message);
             }
         });
+    });
 
-        // Add to Favorites AJAX
-        $('.btn-favorite').click(function() {
-            var movieTitle = $(this).closest('.movie').find('.movie-details h4').text();
-            $.ajax({
-                type: 'POST',
-                url: "{% url 'users:add_to_favorites' %}",
-                data: JSON.stringify({ 'movie_title': movieTitle }),
-                contentType: 'application/json',
-                success: function(response) {
-                    alert(response.message);
-                }
-            });
+    // Add to Watchlist AJAX
+    $('.btn-watchlist').click(function() {
+        var movieTitle = $(this).closest('.movie').find('.movie-details h4').text();
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'users:add_to_wishlist' %}",
+            data: JSON.stringify({ 'movie_title': movieTitle }),
+            contentType: 'application/json',
+            success: function(response) {
+                alert(response.message);
+            }
         });
+    });
 
-        // Add to Watchlist AJAX
-        $('.btn-watchlist').click(function() {
-            var movieTitle = $(this).closest('.movie').find('.movie-details h4').text();
-            $.ajax({
-                type: 'POST',
-                url: "{% url 'users:add_to_wishlist' %}",
-                data: JSON.stringify({ 'movie_title': movieTitle }),
-                contentType: 'application/json',
-                success: function(response) {
-                    alert(response.message);
-                }
-            });
-        });
-
-        // Search Autocomplete
-        $('#search-input').on('input', function() {
-            var query = $(this).val();
-            if (query.length > 2) {
-                $.ajax({
-                    url: "{% url 'users:recommendations' %}",
-                    data: { 'query': query },
-                    success: function(data) {
-                        var results = data.results;
-                        var resultsContainer = $('#autocomplete-results');
-                        resultsContainer.empty();
-                        results.forEach(function(movie) {
-                            resultsContainer.append('<li class="list-group-item">' + movie.title + '</li>');
-                        });
-                        resultsContainer.show();
+    // Watch Now AJAX
+    $('.btn-watch-now').click(function() {
+        var movieTitle = $(this).closest('.movie').find('.movie-details h4').text();
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'users:get_streaming_url' %}",
+            data: JSON.stringify({ 'movie_title': movieTitle }),
+            contentType: 'application/json',
+            success: function(response) {
+                if (response.success) {
+                    var urls = response.urls;
+                    if (urls.netflix || urls.amazon_prime) {
+                        var choice = prompt("Choose a streaming service:\n1. Netflix\n2. Amazon Prime", "1");
+                        if (choice === "1" && urls.netflix) {
+                            window.location.href = urls.netflix; // Redirect to Netflix
+                        } else if (choice === "2" && urls.amazon_prime) {
+                            window.location.href = urls.amazon_prime; // Redirect to Amazon Prime
+                        } else {
+                            alert('Invalid choice. Please try again.');
+                        }
+                    } else {
+                        alert('No streaming link found.');
                     }
-                });
-            } else {
-                $('#autocomplete-results').hide();
+                } else {
+                    alert('Streaming link not found.');
+                }
+            },
+            error: function() {
+                alert('An error occurred.');
             }
         });
+    });
 
-        // Hide autocomplete results when clicking outside
-        $(document).click(function(event) {
-            if (!$(event.target).closest('#autocomplete-results, #search-input').length) {
-                $('#autocomplete-results').hide();
-            }
-        });
+    // Search Autocomplete
+    $('#search-input').on('input', function() {
+        var query = $(this).val();
+        if (query.length > 2) {
+            $.ajax({
+                url: "{% url 'users:recommendations' %}",
+                data: { 'query': query },
+                success: function(data) {
+                    var results = data.results;
+                    var resultsContainer = $('#autocomplete-results');
+                    resultsContainer.empty();
+                    results.forEach(function(movie) {
+                        resultsContainer.append('<li class="list-group-item">' + movie.title + '</li>');
+                    });
+                    resultsContainer.show();
+                }
+            });
+        } else {
+            $('#autocomplete-results').hide();
+        }
+    });
+
+    // Hide autocomplete results when clicking outside
+    $(document).click(function(event) {
+        if (!$(event.target).closest('#autocomplete-results, #search-input').length) {
+            $('#autocomplete-results').hide();
+        }
+    });
     </script>
 </body>
 </html>
