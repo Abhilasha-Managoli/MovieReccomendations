@@ -248,6 +248,7 @@
                                 <div class="movie-details">
                                     <h4>{{ movie.title }}</h4>
                                     <p>Release Date: {{ movie.release_date }}</p>
+                                    <p>Genres: {% if movie.genre_names %}{{ movie.genre_names|join:", " }}{% else %}N/A{% endif %}</p>
                                     <p>Rating: {{ movie.vote_average }}</p>
                                     <p>{{ movie.overview }}</p>
                                 </div>

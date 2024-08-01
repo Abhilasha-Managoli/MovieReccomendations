@@ -140,13 +140,17 @@ def autocomplete(request):
             response = requests.get(url_search, params=params)
             response.raise_for_status()
             results = response.json().get('results', [])
-            movies = [{'id': item['id'], 'title': item.get('title') or item.get('name')} for item in results if
-                      item.get('media_type') == 'movie']
+            movies = [{
+                'id': item['id'],
+                'title': item.get('title') or item.get('name'),
+                'poster_url': f"https://image.tmdb.org/t/p/w200{item.get('poster_path')}" if item.get('poster_path') else None
+            } for item in results if item.get('media_type') == 'movie']
             return JsonResponse(movies, safe=False)
         except requests.exceptions.RequestException as e:
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse([], safe=False)
+
 
 
 def search_results(request):

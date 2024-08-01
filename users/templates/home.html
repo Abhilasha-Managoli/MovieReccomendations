@@ -411,8 +411,8 @@
                         $.each(data, function(index, movie) {
                             $("#autocomplete-results").append(
                                 `<li class="list-group-item autocomplete-suggestion" data-movie-id="${movie.id}">
-                                <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" alt="${movie.title}">
-                                ${movie.title}
+                                    <img src="${movie.poster_url || 'https://via.placeholder.com/50x75'}" alt="${movie.title} Poster" style="width: 50px; height: 75px; margin-right: 10px;">
+                                    ${movie.title}
                                 </li>`
                             );
                         });
