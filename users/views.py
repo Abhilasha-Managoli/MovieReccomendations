@@ -80,33 +80,59 @@ def logout_view(request):
 @login_required
 def recommendations(request):
     user_name = request.user.first_name.capitalize() if request.user.first_name else ''
+    movie_id = request.GET.get('movie_id')
     query = request.GET.get('query', '')
     url_movie = 'https://api.themoviedb.org/3/search/movie'
     url_tv = 'https://api.themoviedb.org/3/search/tv'
     params = {'api_key': API_KEY, 'query': query}
     genres = get_genres()
 
-    try:
-        response_movie = requests.get(url_movie, params=params)
-        response_movie.raise_for_status()
-        movies = response_movie.json().get('results', [])
-        response_tv = requests.get(url_tv, params=params)
-        response_tv.raise_for_status()
-        tv_shows = response_tv.json().get('results', [])
-        combined_results = movies + tv_shows
+    # Handle search by query
+    if query:
+        try:
+            response_movie = requests.get(url_movie, params=params)
+            response_movie.raise_for_status()
+            movies = response_movie.json().get('results', [])
+            response_tv = requests.get(url_tv, params=params)
+            response_tv.raise_for_status()
+            tv_shows = response_tv.json().get('results', [])
+            combined_results = movies + tv_shows
 
-        for item in combined_results:
-            item['genre_names'] = [genres.get(genre_id, 'Unknown') for genre_id in item.get('genre_ids', [])]
-            item['title'] = item.get('title') or item.get('name')
+            for item in combined_results:
+                item['genre_names'] = [genres.get(genre_id, 'Unknown') for genre_id in item.get('genre_ids', [])]
+                item['title'] = item.get('title') or item.get('name')
 
-        return render(request, 'moviehome.html', {
-            'movies': combined_results,
-            'query': query,
-            'user_name': user_name
-        })
-    except requests.exceptions.RequestException as e:
-        return HttpResponse(f"An error occurred: {e}", status=500)
+            return render(request, 'moviehome.html', {
+                'movies': combined_results,
+                'query': query,
+                'user_name': user_name
+            })
+        except requests.exceptions.RequestException as e:
+            return HttpResponse(f"An error occurred: {e}", status=500)
 
+    # Handle search by movie_id
+    if movie_id:
+        # You would need to define the logic to handle the movie_id, e.g., get the details of a specific movie
+        # Example: Fetch movie details using the movie_id
+        url_movie_details = f'https://api.themoviedb.org/3/movie/{movie_id}'
+        try:
+            response = requests.get(url_movie_details, params={'api_key': API_KEY})
+            response.raise_for_status()
+            movie_details = response.json()
+            return render(request, 'moviehome.html', {
+                'movies': [movie_details],  # Pass movie details to the template
+                'query': '',
+                'user_name': user_name
+            })
+        except requests.exceptions.RequestException as e:
+            return HttpResponse(f"An error occurred: {e}", status=500)
+
+    # Default response if neither movie_id nor query is provided
+    return render(request, 'moviehome.html', {
+        'movies': [],
+        'query': '',
+        'user_name': user_name
+    })
 
 @login_required
 @csrf_protect

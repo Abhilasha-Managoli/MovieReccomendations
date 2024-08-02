@@ -394,54 +394,57 @@
         });
 
         $("#search-input").on("input", function() {
-            var query = $(this).val();
-            if (query.length < 2) {
-                $("#autocomplete-results").hide(); // Hide results if input is too short
-                return;
-            }
-            $.ajax({
-                url: "{% url 'users:autocomplete' %}",
-                dataType: "json",
-                data: {
-                    term: query
-                },
-                success: function(data) {
-                    $("#autocomplete-results").empty(); // Clear previous results
-                    if (data.length) {
-                        $.each(data, function(index, movie) {
-                            $("#autocomplete-results").append(
-                                `<li class="list-group-item autocomplete-suggestion" data-movie-id="${movie.id}">
-                                    <img src="${movie.poster_url || 'https://via.placeholder.com/50x75'}" alt="${movie.title} Poster" style="width: 50px; height: 75px; margin-right: 10px;">
-                                    ${movie.title}
-                                </li>`
-                            );
-                        });
-                        $("#autocomplete-results").show();
-                    } else {
-                        $("#autocomplete-results").hide();
-                    }
+        var query = $(this).val();
+        if (query.length < 2) {
+            $("#autocomplete-results").hide(); // Hide results if input is too short
+            return;
+        }
+        $.ajax({
+            url: "{% url 'users:autocomplete' %}",
+            dataType: "json",
+            data: {
+                term: query
+            },
+            success: function(data) {
+                $("#autocomplete-results").empty(); // Clear previous results
+                if (data.length) {
+                    $.each(data, function(index, movie) {
+                        $("#autocomplete-results").append(
+                            `<li class="list-group-item autocomplete-suggestion" data-movie-id="${movie.id}">
+                                <img src="${movie.poster_url || 'https://via.placeholder.com/50x75'}" alt="${movie.title} Poster" style="width: 50px; height: 75px; margin-right: 10px;">
+                                ${movie.title}
+                            </li>`
+                        );
+                    });
+                    $("#autocomplete-results").show();
+                } else {
+                    $("#autocomplete-results").hide();
                 }
-            });
-        });
-
-        $(document).on("click", ".autocomplete-suggestion", function() {
-            var movieId = $(this).data("movie-id");
-            window.location.href = "{% url 'users:recommendations' %}?movie_id=" + movieId;
-        });
-
-        $("#search-button").click(function() {
-            var query = $("#search-input").val();
-            if (query) {
-                window.location.href = "{% url 'users:recommendations' %}?query=" + encodeURIComponent(query);
-            }
-        });
-
-        $(document).click(function(event) {
-            if (!$(event.target).closest('#search-input, #autocomplete-results').length) {
-                $("#autocomplete-results").hide(); // Hide results if clicking outside
             }
         });
     });
+
+    // Handle clicks on autocomplete suggestions
+    $(document).on("click", ".autocomplete-suggestion", function() {
+        var movieId = $(this).data("movie-id");
+        window.location.href = "{% url 'users:recommendations' %}?movie_id=" + movieId;
+    });
+
+    // Handle search button click
+    $("#search-button").click(function() {
+        var query = $("#search-input").val();
+        if (query) {
+            window.location.href = "{% url 'users:recommendations' %}?query=" + encodeURIComponent(query);
+        }
+    });
+
+    // Hide autocomplete results when clicking outside
+    $(document).click(function(event) {
+        if (!$(event.target).closest('#search-input, #autocomplete-results').length) {
+            $("#autocomplete-results").hide();
+        }
+    });
+});
     </script>
 </body>
 </html>
