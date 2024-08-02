@@ -140,8 +140,11 @@ def add_to_wishlist(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         movie_title = data.get('movie_title')
+        if Wishlist.objects.filter(user=request.user, movie_title=movie_title).exists():
+            return JsonResponse({'success': False, 'message': 'Movie already added to watchlist!'})
+
         Wishlist.objects.create(user=request.user, movie_title=movie_title)
-        return JsonResponse({'success': True, 'message': 'Movie added to watchlist!'})
+        return JsonResponse({'success': True, 'message': 'Movie added to watchlist successfully.'})
     return HttpResponse(status=405)
 
 
@@ -151,8 +154,11 @@ def add_to_favorites(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         movie_title = data.get('movie_title')
+        if Favorites.objects.filter(user=request.user, movie_title=movie_title).exists():
+            return JsonResponse({'success': False, 'message': 'Movie already added to favorites!'})
+
         Favorites.objects.create(user=request.user, movie_title=movie_title)
-        return JsonResponse({'success': True, 'message': 'Movie added to favorites!'})
+        return JsonResponse({'success': True, 'message': 'Movie added to Favorites successfully.'})
     return HttpResponse(status=405)
 
 
