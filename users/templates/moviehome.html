@@ -199,6 +199,31 @@
         .user-buttons .btn {
             width: 92px;
         }
+        #autocomplete-results {
+            position: absolute;
+            margin-left: auto;
+            margin-right: auto;
+            top: 70px;
+            width: 50%;
+            background-color: #f8ffe5;
+            border-bottom: 1px solid #ccc;
+            padding: 10px;
+            z-index: 1000;
+            display: none;
+            border-bottom: none;
+        }
+        #autocomplete-results .list-group-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            cursor: pointer;
+        }
+        #autocomplete-results .list-group-item img {
+            width: 50px;
+            height: auto;
+            margin-right: 10px;
+        }
+
     </style>
 </head>
 <body>
@@ -352,33 +377,58 @@
     });
 
     // Search Autocomplete
-    $('#search-input').on('input', function() {
-        var query = $(this).val();
-        if (query.length > 2) {
-            $.ajax({
-                url: "{% url 'users:recommendations' %}",
-                data: { 'query': query },
-                success: function(data) {
-                    var results = data.results;
-                    var resultsContainer = $('#autocomplete-results');
-                    resultsContainer.empty();
-                    results.forEach(function(movie) {
-                        resultsContainer.append('<li class="list-group-item">' + movie.title + '</li>');
-                    });
-                    resultsContainer.show();
-                }
-            });
-        } else {
-            $('#autocomplete-results').hide();
-        }
-    });
+   $("#search-input").on("input", function() {
+   var query = $(this).val();
+   if (query.length < 2) {
+       $("#autocomplete-results").hide(); // Hide results if input is too short
+       return;
+   }
+   $.ajax({
+       url: "{% url 'users:autocomplete' %}",
+       dataType: "json",
+       data: {
+           term: query
+       },
+       success: function(data) {
+           $("#autocomplete-results").empty(); // Clear previous results
+           if (data.length) {
+               $.each(data, function(index, movie) {
+                   $("#autocomplete-results").append(
+                       `<li class="list-group-item autocomplete-suggestion" data-movie-id="${movie.id}">
+                            <img src="${movie.poster_url || 'https://via.placeholder.com/50x75'}" alt="${movie.title} Poster" style="width: 50px; height: 75px; margin-right: 10px;">
+                            ${movie.title}
+                       </li>`
+                   );
+               });
+               $("#autocomplete-results").show();
+           } else {
+               $("#autocomplete-results").hide();
+           }
+       }
+   });
+});
 
-    // Hide autocomplete results when clicking outside
-    $(document).click(function(event) {
-        if (!$(event.target).closest('#autocomplete-results, #search-input').length) {
-            $('#autocomplete-results').hide();
-        }
-    });
+
+$(document).on("click", ".autocomplete-suggestion", function() {
+   var movieId = $(this).data("movie-id");
+   window.location.href = "{% url 'users:recommendations' %}?movie_id=" + movieId;
+});
+
+
+$("#search-button").click(function() {
+   var query = $("#search-input").val();
+   if (query) {
+       window.location.href = "{% url 'users:recommendations' %}?query=" + encodeURIComponent(query);
+   }
+});
+
+
+$(document).click(function(event) {
+   if (!$(event.target).closest('#search-input, #autocomplete-results').length) {
+       $("#autocomplete-results").hide(); // Hide results if clicking outside
+   }
+});
+
     </script>
 </body>
 </html>
