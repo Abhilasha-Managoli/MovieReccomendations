@@ -228,8 +228,11 @@
 </head>
 <body>
     <div class="logo-container">
-        <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo">
+        <a href="{% url 'users:home' %}">
+            <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo">
+        </a>
     </div>
+
     <div class="search-bar">
         <input type="text" placeholder="Search for movies..." id="search-input" value="{{ query }}">
         <button id="search-button">Search</button>
