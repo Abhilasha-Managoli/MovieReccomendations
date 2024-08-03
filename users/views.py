@@ -1,4 +1,5 @@
 import json
+import random
 
 import requests
 from django.http import HttpResponse, JsonResponse
@@ -33,6 +34,16 @@ def get_genres():
     except requests.exceptions.RequestException as e:
         return {}
 
+def get_similar_movie(movie_id):
+    url_similar = f'https://api.themoviedb.org/3/movie/{movie_id}/similar'
+    params = {'api_key': API_KEY}
+    try:
+        response = requests.get(url_similar, params=params)
+        response.raise_for_status()
+        similar_movies = response.json().get('results', [])
+        return similar_movies
+    except requests.exceptions.RequestException:
+        return []
 
 def home(request):
     url_trending = 'https://api.themoviedb.org/3/trending/movie/week'
@@ -55,11 +66,75 @@ def movie_recommendation(request):
 @login_required
 def userinfo_view(request):
     wishlist = Wishlist.objects.filter(user=request.user)
-    favorites = Favorites.objects.filter(user=request.user)  # Query the favorites
+    favorites = Favorites.objects.filter(user=request.user)
+
+    movie_details = []
+    favorite_details = []
+
+    # Fetch details for wishlist movies
+    for movie in wishlist:
+        movie_title = movie.movie_title
+        search_url = f'https://api.themoviedb.org/3/search/movie'
+        params = {'api_key': API_KEY, 'query': movie_title}
+
+        try:
+            response = requests.get(search_url, params=params)
+            response.raise_for_status()
+            search_results = response.json().get('results', [])
+            if search_results:
+                movie_id = search_results[0]['id']
+                url_movie_details = f'https://api.themoviedb.org/3/movie/{movie_id}'
+                details_response = requests.get(url_movie_details, params={'api_key': API_KEY})
+                details_response.raise_for_status()
+                details = details_response.json()
+                movie_details.append({
+                    'title': details.get('title'),
+                    'poster_path': details.get('poster_path'),
+                    'genre_ids': details.get('genre_ids', []),
+                    'overview': details.get('overview')
+                })
+        except requests.exceptions.RequestException:
+            continue
+
+    # Fetch details for favorite movies
+    for movie in favorites:
+        movie_title = movie.movie_title
+        search_url = f'https://api.themoviedb.org/3/search/movie'
+        params = {'api_key': API_KEY, 'query': movie_title}
+
+        try:
+            response = requests.get(search_url, params=params)
+            response.raise_for_status()
+            search_results = response.json().get('results', [])
+            if search_results:
+                movie_id = search_results[0]['id']
+                url_movie_details = f'https://api.themoviedb.org/3/movie/{movie_id}'
+                details_response = requests.get(url_movie_details, params={'api_key': API_KEY})
+                details_response.raise_for_status()
+                details = details_response.json()
+                favorite_details.append({
+                    'title': details.get('title'),
+                    'poster_path': details.get('poster_path'),
+                    'genre_ids': details.get('genre_ids', []),
+                    'overview': details.get('overview')
+                })
+        except requests.exceptions.RequestException:
+            continue
+
+    # Fetch genre names
+    genres = get_genres()
+
+    # Convert genre IDs to genre names
+    for movie in movie_details:
+        movie['genre_names'] = [genres.get(genre_id, 'Unknown') for genre_id in movie.get('genre_ids', [])]
+
+    for movie in favorite_details:
+        movie['genre_names'] = [genres.get(genre_id, 'Unknown') for genre_id in movie.get('genre_ids', [])]
+
     return render(request, 'userinfo.html', {
         'user': request.user,
-        'wishlist': wishlist,
-        'favorites': favorites,
+        'wishlist': movie_details,
+        'favorites': favorite_details,
     })
 
 

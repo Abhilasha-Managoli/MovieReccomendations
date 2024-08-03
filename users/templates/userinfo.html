@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,9 +33,26 @@
             background-color: #ef476f;
             color: white;
         }
+        .logo-container {
+            position: fixed;
+            top: 2px;
+            left: 150px;
+            padding: 10px;
+            z-index: 1001;
+            background-color: #f8ffe5;
+            width: 140px;
+            height: 60px;
+            margin: 0;
+            display: flex;
+        }
+        .logo {
+            width: 110px;
+            height: 90px;
+        }
     </style>
 </head>
 <body>
+
     <div class="container-fluid">
         <div class="row">
             <nav class="col-md-3 col-lg-2 d-md-block sidebar">
@@ -61,19 +79,45 @@
                 </div>
                 <div id="wishlist" style="display:none;">
                     <h2>Watchlist</h2>
-                    <ul>
-                        {% for item in wishlist %}
-                            <li>{{ item.movie_title }}</li>
+                    <div class="row">
+                        {% for movie in wishlist %}
+                            <div class="col-md-4 mb-4">
+                                <div class="card">
+                                    <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ movie.title }}</h5>
+                                        <p class="card-text">
+                                            <strong>Genres:</strong> {{ movie.genre_names|join:', ' }}<br>
+                                            <strong>Description:</strong> {{ movie.overview }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p>No movies in your watchlist.</p>
                         {% endfor %}
-                    </ul>
+                    </div>
                 </div>
                 <div id="favorites" style="display:none;">
                     <h2>Favorites</h2>
-                    <ul>
-                        {% for item in favorites %}
-                            <li>{{ item.movie_title }}</li>
+                    <div class="row">
+                        {% for movie in favorites %}
+                            <div class="col-md-4 mb-4">
+                                <div class="card">
+                                    <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ movie.title }}</h5>
+                                        <p class="card-text">
+                                            <strong>Genres:</strong> {{ movie.genre_names|join:', ' }}<br>
+                                            <strong>Description:</strong> {{ movie.overview }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p>No movies in your favorites.</p>
                         {% endfor %}
-                    </ul>
+                    </div>
                 </div>
             </main>
         </div>
