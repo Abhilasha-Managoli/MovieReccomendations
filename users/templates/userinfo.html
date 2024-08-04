@@ -33,11 +33,11 @@
             background-color: #ef476f;
             color: white;
         }
-        .card{
+        .card {
             background-color: #f8ffe5;
             border: none;
         }
-        .card-body{
+        .card-body {
             background-color: #f8ffe5;
         }
         .logo-container {
@@ -56,7 +56,6 @@
             width: 110px;
             height: 90px;
         }
-        /* Adjust the size of the movie posters */
         .card-img-top {
             width: 100%;
             max-width: 200px;
@@ -65,13 +64,16 @@
             object-fit: contain;
             margin: 0 auto;
         }
-        /* Additional styling to separate genres and description */
         .card-text {
             display: block;
             margin-top: 10px;
         }
         .genres {
             margin-bottom: 10px;
+        }
+        .delete-button {
+            margin-top: 10px;
+            display: block;
         }
     </style>
 </head>
@@ -116,6 +118,7 @@
                                         <p class="card-text">
                                             <strong>Description:</strong> {{ movie.overview }}
                                         </p>
+                                        <button class="btn btn-danger delete-button" data-movie-title="{{ movie.title }}" onclick="deleteMovie('wishlist', '{{ movie.title }}')">Delete</button>
                                     </div>
                                 </div>
                             </div>
@@ -139,6 +142,7 @@
                                         <p class="card-text">
                                             <strong>Description:</strong> {{ movie.overview }}
                                         </p>
+                                        <button class="btn btn-danger delete-button" data-movie-title="{{ movie.title }}" onclick="deleteMovie('favorites', '{{ movie.title }}')">Delete</button>
                                     </div>
                                 </div>
                             </div>
@@ -176,6 +180,26 @@
             document.getElementById('personal-info-tab').classList.remove('active');
             document.getElementById('wishlist-tab').classList.remove('active');
         });
+
+        function deleteMovie(listType, movieTitle) {
+            const url = listType === 'wishlist' ? '{% url "users:remove_from_wishlist" %}' : '{% url "users:remove_from_favorites" %}';
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ movie_title: movieTitle })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload(); // Refresh the page to reflect the changes
+                } else {
+                    alert('Failed to delete movie: ' + data.message);
+                }
+            });
+        }
     </script>
 </body>
 </html>

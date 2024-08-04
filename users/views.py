@@ -7,6 +7,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.views.decorators.http import require_POST
+
 from users.models import Wishlist, Favorites
 
 
@@ -125,6 +127,37 @@ def userinfo_view(request):
         'favorites': favorite_details,
     })
 
+@csrf_exempt
+def remove_from_wishlist(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        movie_title = data.get('movie_title')
+        user = request.user
+        print(f"Removing from wishlist: {movie_title} for user {user.username}")
+
+        try:
+            movie = Wishlist.objects.get(user=user, movie_title=movie_title)
+            movie.delete()
+            return JsonResponse({'success': True})
+        except Wishlist.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Movie not found in wishlist.'})
+    return JsonResponse({'success': False, 'message': 'Invalid request.'})
+
+@csrf_exempt
+def remove_from_favorites(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        movie_title = data.get('movie_title')
+        user = request.user
+        print(f"Removing from favorites: {movie_title} for user {user.username}")
+
+        try:
+            movie = Favorites.objects.get(user=user, movie_title=movie_title)
+            movie.delete()
+            return JsonResponse({'success': True})
+        except Favorites.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Movie not found in favorites.'})
+    return JsonResponse({'success': False, 'message': 'Invalid request.'})
 
 @login_required
 def process_movie(request):
