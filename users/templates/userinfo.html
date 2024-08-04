@@ -11,10 +11,22 @@
             background-color: #f8ffe5;
             color: #333333;
         }
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #f8ffe5;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            padding: 55px 20px;
+            box-sizing: border-box;
+        }
         .sidebar {
             background-color: #ef476f;
             height: 100vh;
-            padding-top: 20px;
+            padding-top: 110px;
         }
         .sidebar a {
             display: block;
@@ -28,6 +40,7 @@
         }
         .content {
             padding: 20px;
+            margin-top: 90px;
         }
         .nav-link.active {
             background-color: #ef476f;
@@ -39,6 +52,49 @@
         }
         .card-body {
             background-color: #f8ffe5;
+        }
+        .btn-primary {
+            background-color: #ef476f;
+            border-color: #ef476f;
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+        .btn-primary:hover {
+            background-color: #d6406c;
+            border-color: #d6406c;
+        }
+        .btn-secondary {
+            background-color: #ffc43d;
+            border-color: #ffc43d;
+            color: #ffffff;
+            position: fixed;
+            top: 30px;
+            right: 10px;
+            padding: 6px 10px;
+            z-index: 1000;
+        }
+        .btn-secondary-2 {
+            background-color: #ffc43d;
+            border-color: #ffc43d;
+            color: #ffffff;
+            position: fixed;
+            top: 30px;
+            right: 100px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: calc(100% - 130px);
+            padding: 6px 10px;
+            z-index: 1000;
+        }
+        .btn-secondary:hover {
+            background-color: #e0b837;
+            border-color: #e0b837;
+        }
+        .btn-secondary-2:hover {
+            background-color: #e0b837;
+            border-color: #e0b837;
         }
         .logo-container {
             position: fixed;
@@ -78,6 +134,22 @@
     </style>
 </head>
 <body>
+
+    <div class="header">
+        <div class="logo-container">
+        <a href="/">
+            <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo">
+        </a>
+        </div>
+        <div class="user-buttons">
+            {% if user.is_authenticated %}
+                <a href="{% url 'users:userinfo' %}" class="btn btn-secondary-2" id="user-button">{{ user.first_name }}</a>
+                <a href="{% url 'users:logout' %}" class="btn btn-secondary">Logout</a>
+            {% else %}
+                <a href="{% url 'account_login' %}" class="btn btn-secondary">Login With Google</a>
+            {% endif %}
+        </div>
+    </div>
 
     <div class="container-fluid">
         <div class="row">
