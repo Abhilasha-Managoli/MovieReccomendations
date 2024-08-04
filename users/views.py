@@ -1,5 +1,5 @@
 import json
-import random
+import logging
 
 import requests
 from django.http import HttpResponse, JsonResponse
@@ -13,26 +13,27 @@ from users.models import Wishlist, Favorites
 API_KEY = "6d9d64446aa322b6e954111c63b34344"
 
 
-def get_genres():
+def fetch_genres():
     url_movie_genres = 'https://api.themoviedb.org/3/genre/movie/list'
     url_tv_genres = 'https://api.themoviedb.org/3/genre/tv/list'
     params = {'api_key': API_KEY}
+
     genres = {}
-
     try:
-        response_movie_genres = requests.get(url_movie_genres, params=params)
-        response_movie_genres.raise_for_status()
-        movie_genres = response_movie_genres.json().get('genres', [])
-        genres.update({genre['id']: genre['name'] for genre in movie_genres})
+        response_movie = requests.get(url_movie_genres, params=params)
+        response_movie.raise_for_status()
+        movie_genres = response_movie.json().get('genres', [])
 
-        response_tv_genres = requests.get(url_tv_genres, params=params)
-        response_tv_genres.raise_for_status()
-        tv_genres = response_tv_genres.json().get('genres', [])
-        genres.update({genre['id']: genre['name'] for genre in tv_genres})
+        response_tv = requests.get(url_tv_genres, params=params)
+        response_tv.raise_for_status()
+        tv_genres = response_tv.json().get('genres', [])
 
-        return genres
+        for genre in movie_genres + tv_genres:
+            genres[genre['id']] = genre['name']
     except requests.exceptions.RequestException as e:
-        return {}
+        logging.error(f"Error fetching genres: {e}")
+
+    return genres
 
 def get_similar_movie(movie_id):
     url_similar = f'https://api.themoviedb.org/3/movie/{movie_id}/similar'
@@ -71,65 +72,52 @@ def userinfo_view(request):
     movie_details = []
     favorite_details = []
 
-    # Fetch details for wishlist movies
+    def fetch_movie_details(movie_title):
+        search_url = f'https://api.themoviedb.org/3/search/movie'
+        params = {'api_key': API_KEY, 'query': movie_title}
+        try:
+            response = requests.get(search_url, params=params)
+            response.raise_for_status()
+            search_results = response.json().get('results', [])
+            if search_results:
+                movie_id = search_results[0]['id']
+                url_movie_details = f'https://api.themoviedb.org/3/movie/{movie_id}'
+                details_response = requests.get(url_movie_details, params={'api_key': API_KEY})
+                details_response.raise_for_status()
+                details = details_response.json()
+                logging.debug(f"Movie details for '{movie_title}': {details}")
+                return {
+                    'title': details.get('title'),
+                    'poster_path': details.get('poster_path'),
+                    'genre_ids': [genre['id'] for genre in details.get('genres', [])],
+                    'overview': details.get('overview')
+                }
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Error fetching movie details for '{movie_title}': {e}")
+            return None
+
     for movie in wishlist:
-        movie_title = movie.movie_title
-        search_url = f'https://api.themoviedb.org/3/search/movie'
-        params = {'api_key': API_KEY, 'query': movie_title}
+        details = fetch_movie_details(movie.movie_title)
+        if details:
+            movie_details.append(details)
 
-        try:
-            response = requests.get(search_url, params=params)
-            response.raise_for_status()
-            search_results = response.json().get('results', [])
-            if search_results:
-                movie_id = search_results[0]['id']
-                url_movie_details = f'https://api.themoviedb.org/3/movie/{movie_id}'
-                details_response = requests.get(url_movie_details, params={'api_key': API_KEY})
-                details_response.raise_for_status()
-                details = details_response.json()
-                movie_details.append({
-                    'title': details.get('title'),
-                    'poster_path': details.get('poster_path'),
-                    'genre_ids': details.get('genre_ids', []),
-                    'overview': details.get('overview')
-                })
-        except requests.exceptions.RequestException:
-            continue
-
-    # Fetch details for favorite movies
     for movie in favorites:
-        movie_title = movie.movie_title
-        search_url = f'https://api.themoviedb.org/3/search/movie'
-        params = {'api_key': API_KEY, 'query': movie_title}
+        details = fetch_movie_details(movie.movie_title)
+        if details:
+            favorite_details.append(details)
 
-        try:
-            response = requests.get(search_url, params=params)
-            response.raise_for_status()
-            search_results = response.json().get('results', [])
-            if search_results:
-                movie_id = search_results[0]['id']
-                url_movie_details = f'https://api.themoviedb.org/3/movie/{movie_id}'
-                details_response = requests.get(url_movie_details, params={'api_key': API_KEY})
-                details_response.raise_for_status()
-                details = details_response.json()
-                favorite_details.append({
-                    'title': details.get('title'),
-                    'poster_path': details.get('poster_path'),
-                    'genre_ids': details.get('genre_ids', []),
-                    'overview': details.get('overview')
-                })
-        except requests.exceptions.RequestException:
-            continue
+    genres = fetch_genres()
+    logging.debug(f"Genres fetched: {genres}")
 
-    # Fetch genre names
-    genres = get_genres()
-
-    # Convert genre IDs to genre names
     for movie in movie_details:
-        movie['genre_names'] = [genres.get(genre_id, 'Unknown') for genre_id in movie.get('genre_ids', [])]
+        genre_names = [genres.get(genre_id, 'Unknown') for genre_id in movie.get('genre_ids', [])]
+        movie['genre_names'] = genre_names
+        logging.debug(f"Wishlist movie '{movie['title']}' genres: {genre_names}")
 
     for movie in favorite_details:
-        movie['genre_names'] = [genres.get(genre_id, 'Unknown') for genre_id in movie.get('genre_ids', [])]
+        genre_names = [genres.get(genre_id, 'Unknown') for genre_id in movie.get('genre_ids', [])]
+        movie['genre_names'] = genre_names
+        logging.debug(f"Favorite movie '{movie['title']}' genres: {genre_names}")
 
     return render(request, 'userinfo.html', {
         'user': request.user,
@@ -160,7 +148,7 @@ def recommendations(request):
     url_movie = 'https://api.themoviedb.org/3/search/movie'
     url_tv = 'https://api.themoviedb.org/3/search/tv'
     params = {'api_key': API_KEY, 'query': query}
-    genres = get_genres()
+    genres = fetch_genres()
 
     # Handle search by query
     if query:
@@ -173,8 +161,10 @@ def recommendations(request):
             tv_shows = response_tv.json().get('results', [])
             combined_results = movies + tv_shows
 
+            # Map genre IDs to genre names
             for item in combined_results:
-                item['genre_names'] = [genres.get(genre_id, 'Unknown') for genre_id in item.get('genre_ids', [])]
+                genre_ids = item.get('genre_ids', [])
+                item['genre_names'] = [genres.get(genre_id, 'Unknown') for genre_id in genre_ids]
                 item['title'] = item.get('title') or item.get('name')
 
             return render(request, 'moviehome.html', {
@@ -187,13 +177,18 @@ def recommendations(request):
 
     # Handle search by movie_id
     if movie_id:
-        # You would need to define the logic to handle the movie_id, e.g., get the details of a specific movie
-        # Example: Fetch movie details using the movie_id
         url_movie_details = f'https://api.themoviedb.org/3/movie/{movie_id}'
         try:
             response = requests.get(url_movie_details, params={'api_key': API_KEY})
             response.raise_for_status()
             movie_details = response.json()
+
+            # Ensure genre_ids is a list of IDs, not a list of dicts
+            genre_ids = [genre['id'] for genre in movie_details.get('genres', [])] if isinstance(
+                movie_details.get('genres', []), list) and isinstance(movie_details.get('genres', [])[0],
+                                                                      dict) else movie_details.get('genre_ids', [])
+            movie_details['genre_names'] = [genres.get(genre_id, 'Unknown') for genre_id in genre_ids]
+
             return render(request, 'moviehome.html', {
                 'movies': [movie_details],  # Pass movie details to the template
                 'query': '',
