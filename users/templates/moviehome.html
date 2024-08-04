@@ -234,7 +234,7 @@
     </div>
 
     <div class="search-bar">
-        <input type="text" placeholder="Search for movies..." id="search-input" value="{{ query }}">
+        <input type="text" placeholder="Search for movies or TV shows..." id="search-input" value="{{ query }}">
         <button id="search-button">Search</button>
         <ul id="autocomplete-results" class="list-group" style="display: none; position: absolute; z-index: 1000;"></ul>
         <div class="user-buttons">
@@ -247,7 +247,7 @@
         </div>
     </div>
 
-     <div class="container">
+    <div class="container">
         <div class="row">
             {% for movie in recommended_movies %}
             <div class="col-md-4">
@@ -262,7 +262,6 @@
             {% endfor %}
         </div>
     </div>
-
 
     <div class="container">
         {% if success_message %}
@@ -280,14 +279,14 @@
                             <div class="movie">
                                 <div style="position: relative;">
                                     <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }} poster">
-                                    <button class="btn-overlay btn-favorite" data-movie-id="{{ movie.id }}">💟</button>
-                                    <button class="btn-overlay btn-watchlist" data-movie-id="{{ movie.id }}">➕</button>
-                                    <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}">
+                                    <button class="btn-overlay btn-favorite" data-movie-id="{{ movie.id }}" data-media-type="movie">💟</button>
+                                    <button class="btn-overlay btn-watchlist" data-movie-id="{{ movie.id }}" data-media-type="movie">➕</button>
+                                    <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}" data-media-type="movie">
                                         <span class="icon">👁️</span> Watch Now
                                     </button>
                                     <div class="movie-actions">
-                                        <button class="btn-thumbs-up" data-movie-id="{{ movie.id }}">👍</button>
-                                        <button class="btn-thumbs-down" data-movie-id="{{ movie.id }}">👎</button>
+                                        <button class="btn-thumbs-up" data-movie-id="{{ movie.id }}" data-media-type="movie">👍</button>
+                                        <button class="btn-thumbs-down" data-movie-id="{{ movie.id }}" data-media-type="movie">👎</button>
                                     </div>
                                 </div>
                                 <div class="movie-details">
@@ -365,11 +364,13 @@
 
     // Watch Now AJAX
     $('.btn-watch-now').click(function() {
-        var movieTitle = $(this).closest('.movie').find('.movie-details h4').text();
+        var mediaTitle = $(this).data('title'); // Ensure you are passing the media title
+        var mediaType = $(this).data('media-type');
+
         $.ajax({
             type: 'POST',
             url: "{% url 'users:get_streaming_url' %}",
-            data: JSON.stringify({ 'movie_title': movieTitle }),
+            data: JSON.stringify({ 'media_title': mediaTitle, 'media_type': mediaType }),
             contentType: 'application/json',
             success: function(response) {
                 if (response.success) {
@@ -381,10 +382,10 @@
                         } else if (choice === "2" && urls.amazon_prime) {
                             window.location.href = urls.amazon_prime; // Redirect to Amazon Prime
                         } else {
-                            alert('Invalid choice. Please try again.');
+                            alert('Invalid choice or streaming option not available. Please try again.');
                         }
                     } else {
-                        alert('No streaming link found.');
+                        alert('No streaming options found.');
                     }
                 } else {
                     alert('Streaming link not found.');
@@ -396,59 +397,64 @@
         });
     });
 
-    // Search Autocomplete
-   $("#search-input").on("input", function() {
-   var query = $(this).val();
-   if (query.length < 2) {
-       $("#autocomplete-results").hide(); // Hide results if input is too short
-       return;
-   }
-   $.ajax({
-       url: "{% url 'users:autocomplete' %}",
-       dataType: "json",
-       data: {
-           term: query
-       },
-       success: function(data) {
-           $("#autocomplete-results").empty(); // Clear previous results
-           if (data.length) {
-               $.each(data, function(index, movie) {
-                   $("#autocomplete-results").append(
-                       `<li class="list-group-item autocomplete-suggestion" data-movie-id="${movie.id}">
-                            <img src="${movie.poster_url || 'https://via.placeholder.com/50x75'}" alt="${movie.title} Poster" style="width: 50px; height: 75px; margin-right: 10px;">
-                            ${movie.title}
-                       </li>`
-                   );
-               });
-               $("#autocomplete-results").show();
-           } else {
-               $("#autocomplete-results").hide();
-           }
-       }
-   });
-});
+    $("#search-input").on("input", function() {
+        var query = $(this).val();
+        if (query.length < 2) {
+            $("#autocomplete-results").hide(); // Hide results if input is too short
+            return;
+        }
+        $.ajax({
+            url: "{% url 'users:autocomplete' %}",
+            dataType: "json",
+            data: {
+                term: query
+            },
+            success: function(data) {
+                $("#autocomplete-results").empty(); // Clear previous results
+                if (data.length) {
+                    $.each(data, function(index, item) {
+                        var typeLabel = item.media_type === 'movie' ? 'Movie' : 'TV Show';
+                        $("#autocomplete-results").append(
+                            `<li class="list-group-item autocomplete-suggestion" data-movie-id="${item.id}" data-media-type="${item.media_type}">
+                                <img src="${item.poster_url || 'https://via.placeholder.com/50x75'}" alt="${item.title} Poster" style="width: 50px; height: 75px; margin-right: 10px;">
+                                ${item.title} <small>(${typeLabel})</small>
+                            </li>`
+                        );
+                    });
+                    $("#autocomplete-results").show();
+                } else {
+                    $("#autocomplete-results").hide();
+                }
+            }
+        });
+    });
 
 
-$(document).on("click", ".autocomplete-suggestion", function() {
-   var movieId = $(this).data("movie-id");
-   window.location.href = "{% url 'users:recommendations' %}?movie_id=" + movieId;
-});
+    $(document).on("click", ".autocomplete-suggestion", function() {
+        var mediaType = $(this).data("media-type");
+        var itemId = $(this).data("movie-id");
 
+        if (mediaType === 'movie') {
+            window.location.href = "{% url 'users:recommendations' %}?movie_id=" + itemId;
+        } else if (mediaType === 'tv') {
+            window.location.href = "{% url 'users:recommendations' %}?tv_id=" + itemId;
+        }
+    });
 
-$("#search-button").click(function() {
-   var query = $("#search-input").val();
-   if (query) {
-       window.location.href = "{% url 'users:recommendations' %}?query=" + encodeURIComponent(query);
-   }
-});
+    $(document).mouseup(function(e) {
+        var container = $("#autocomplete-results");
+        if (!container.is(e.target) && container.has(e.target).length === 0) {
+            container.hide();
+        }
+    });
 
-
-$(document).click(function(event) {
-   if (!$(event.target).closest('#search-input, #autocomplete-results').length) {
-       $("#autocomplete-results").hide(); // Hide results if clicking outside
-   }
-});
-
+    $("#search-button").click(function() {
+        var query = $("#search-input").val();
+        if (query) {
+            window.location.href = "{% url 'users:recommendations' %}?search=" + encodeURIComponent(query);
+        }
+    });
     </script>
 </body>
 </html>
+

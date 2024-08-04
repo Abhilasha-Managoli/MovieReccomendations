@@ -257,7 +257,7 @@
     </div>
 
      <div class="search-bar">
-         <input type="text" placeholder="Search for movies..." id="search-input">
+         <input type="text" placeholder="Search for movies and TV shows..." id="search-input">
          <button id="search-button">Search</button>
          <ul id="autocomplete-results" class="list-group"></ul>
     </div>
@@ -349,77 +349,55 @@
         var isAuthenticated = '{{ user.is_authenticated|yesno:"true,false" }}' === 'true';
 
         document.querySelectorAll('.btn-overlay').forEach(function(button) {
-            button.addEventListener('click', function() {
-                var movieId = this.getAttribute('data-movie-id');
-                var movieTitle = this.getAttribute('data-movie-title');
-                var action = this.getAttribute('data-action');
+        button.addEventListener('click', function() {
+            var mediaId = this.getAttribute('data-media-id');
+            var mediaTitle = this.getAttribute('data-media-title');
+            var mediaType = this.getAttribute('data-media-type'); // New attribute to differentiate between movie and tv show
+            var action = this.getAttribute('data-action');
 
-                if (isAuthenticated) {
-                    if (action === 'watch_now') {
-                        $.ajax({
-                            url: "{% url 'users:get_streaming_url' %}",
-                            method: "POST",
-                            data: JSON.stringify({ movie_title: movieTitle }),
-                            contentType: "application/json",
-                            headers: { "X-CSRFToken": "{{ csrf_token }}" },
-                            success: function(response) {
-                                if (response.success) {
-                                    var servicesAvailable = {
-                                        netflix: response.netflix_url,
-                                        amazon: response.amazon_url
-                                    };
+            if (isAuthenticated) {
+                if (action === 'watch_now') {
+                    $.ajax({
+                        url: "{% url 'users:get_streaming_url' %}",
+                        method: "POST",
+                        data: JSON.stringify({ media_title: mediaTitle, media_type: mediaType }),
+                        contentType: "application/json",
+                        headers: { "X-CSRFToken": "{{ csrf_token }}" },
+                        success: function(response) {
+                            if (response.success) {
+                                var servicesAvailable = {
+                                    netflix: response.urls.netflix,
+                                    amazon: response.urls.amazon_prime
+                                };
 
-                                    if (servicesAvailable.netflix || servicesAvailable.amazon) {
-                                        // Show choice dialog if at least one service is available
-                                        var choice = prompt("Choose a streaming service:\n1. Netflix\n2. Amazon Prime", "1");
-                                        if (choice === '1' && servicesAvailable.netflix) {
-                                            window.location.href = servicesAvailable.netflix; // Redirect to Netflix
-                                        } else if (choice === '2' && servicesAvailable.amazon) {
-                                            window.location.href = servicesAvailable.amazon; // Redirect to Amazon Prime
-                                        } else {
-                                            alert('Invalid choice or service not available. Please try again.');
-                                        }
+                                if (servicesAvailable.netflix || servicesAvailable.amazon) {
+                                    var choice = prompt("Choose a streaming service:\n1. Netflix\n2. Amazon Prime", "1");
+                                    if (choice === '1' && servicesAvailable.netflix) {
+                                        window.location.href = servicesAvailable.netflix;
+                                    } else if (choice === '2' && servicesAvailable.amazon) {
+                                        window.location.href = servicesAvailable.amazon;
                                     } else {
-                                        alert('Streaming service is unavailable.');
+                                        alert('Invalid choice or service not available. Please try again.');
                                     }
                                 } else {
-                                    alert('Streaming link not found.');
+                                    alert('Streaming service is unavailable.');
                                 }
-                            },
-                            error: function() {
-                                alert('An error occurred.');
-                            }
-                        });
-                    } else {
-                        var url = action === 'add_to_favorites' ? "{% url 'users:add_to_favorites' %}" : "{% url 'users:add_to_wishlist' %}";
-                        var message = action === 'add_to_favorites' ? 'Movie added to favorites successfully' : 'Movie added to watchlist successfully';
-
-                        fetch(url, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': '{{ csrf_token }}'
-                            },
-                            body: JSON.stringify({ movie_title: movieTitle })
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                alert(message);
                             } else {
-                                alert('An error occurred: ' + data.message);
+                                alert('Streaming link not found.');
                             }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
+                        },
+                        error: function() {
                             alert('An error occurred.');
-                        });
-                    }
+                        }
+                    });
                 } else {
-                    alert('Please log in to perform this action.');
+                    // Handle other actions (favorites, wishlist)
                 }
-            });
+            } else {
+                alert('Please log in to perform this action.');
+            }
         });
+    });
 
         $("#search-input").on("input", function() {
         var query = $(this).val();
@@ -436,11 +414,12 @@
             success: function(data) {
                 $("#autocomplete-results").empty(); // Clear previous results
                 if (data.length) {
-                    $.each(data, function(index, movie) {
+                    $.each(data, function(index, item) {
+                        var typeLabel = item.media_type === 'movie' ? 'Movie' : 'TV Show';
                         $("#autocomplete-results").append(
-                            `<li class="list-group-item autocomplete-suggestion" data-movie-id="${movie.id}">
-                                <img src="${movie.poster_url || 'https://via.placeholder.com/50x75'}" alt="${movie.title} Poster" style="width: 50px; height: 75px; margin-right: 10px;">
-                                ${movie.title}
+                            `<li class="list-group-item autocomplete-suggestion" data-movie-id="${item.id}" data-media-type="${item.media_type}">
+                                <img src="${item.poster_url || 'https://via.placeholder.com/50x75'}" alt="${item.title} Poster" style="width: 50px; height: 75px; margin-right: 10px;">
+                                ${item.title} <small>(${typeLabel})</small>
                             </li>`
                         );
                     });
@@ -454,8 +433,14 @@
 
     // Handle clicks on autocomplete suggestions
     $(document).on("click", ".autocomplete-suggestion", function() {
-        var movieId = $(this).data("movie-id");
-        window.location.href = "{% url 'users:recommendations' %}?movie_id=" + movieId;
+    var mediaType = $(this).data("media-type");
+    var itemId = $(this).data("movie-id");
+
+    if (mediaType === 'movie') {
+        window.location.href = "{% url 'users:recommendations' %}?movie_id=" + itemId;
+    } else if (mediaType === 'tv') {
+        window.location.href = "{% url 'users:recommendations' %}?tv_id=" + itemId;
+    }
     });
 
     // Handle search button click
@@ -476,6 +461,3 @@
     </script>
 </body>
 </html>
-
-
-

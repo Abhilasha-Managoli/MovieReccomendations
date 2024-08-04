@@ -186,6 +186,7 @@ def logout_view(request):
 def recommendations(request):
     user_name = request.user.first_name.capitalize() if request.user.first_name else ''
     movie_id = request.GET.get('movie_id')
+    tv_id = request.GET.get('tv_id')
     query = request.GET.get('query', '')
     url_movie = 'https://api.themoviedb.org/3/search/movie'
     url_tv = 'https://api.themoviedb.org/3/search/tv'
@@ -239,6 +240,24 @@ def recommendations(request):
         except requests.exceptions.RequestException as e:
             return HttpResponse(f"An error occurred: {e}", status=500)
 
+    if tv_id:
+        url_tv_details = f'https://api.themoviedb.org/3/tv/{tv_id}'
+        try:
+            response = requests.get(url_tv_details, params={'api_key': API_KEY})
+            response.raise_for_status()
+            tv_details = response.json()
+
+            genre_ids = [genre['id'] for genre in tv_details.get('genres', [])]
+            tv_details['genre_names'] = [genres.get(genre_id, 'Unknown') for genre_id in genre_ids]
+
+            return render(request, 'moviehome.html', {
+                'movies': [tv_details],  # Pass TV show details to the template
+                'query': '',
+                'user_name': user_name
+            })
+        except requests.exceptions.RequestException as e:
+            return HttpResponse(f"An error occurred: {e}", status=500)
+
     # Default response if neither movie_id nor query is provided
     return render(request, 'moviehome.html', {
         'movies': [],
@@ -284,12 +303,14 @@ def autocomplete(request):
             response = requests.get(url_search, params=params)
             response.raise_for_status()
             results = response.json().get('results', [])
-            movies = [{
+            suggestions = [{
                 'id': item['id'],
                 'title': item.get('title') or item.get('name'),
-                'poster_url': f"https://image.tmdb.org/t/p/w200{item.get('poster_path')}" if item.get('poster_path') else None
-            } for item in results if item.get('media_type') == 'movie']
-            return JsonResponse(movies, safe=False)
+                'poster_url': f"https://image.tmdb.org/t/p/w200{item.get('poster_path')}" if item.get('poster_path') else None,
+                'media_type': item.get('media_type')
+            } for item in results if item.get('media_type') in ['movie', 'tv']]
+
+            return JsonResponse(suggestions, safe=False)
         except requests.exceptions.RequestException as e:
             return JsonResponse({'error': str(e)}, status=500)
 
@@ -316,9 +337,13 @@ def get_streaming_url(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            movie_title = data.get('movie_title')
+            media_title = data.get('media_title')
+            media_type = data.get('media_type')  # Get whether it's a movie or a TV show
 
-            search_url = f"https://api.themoviedb.org/3/search/movie?api_key={API_KEY}&query={movie_title}"
+            if media_type not in ['movie', 'tv']:
+                return JsonResponse({'success': False, 'message': 'Invalid media type.'})
+
+            search_url = f"https://api.themoviedb.org/3/search/{media_type}?api_key={API_KEY}&query={media_title}"
             response = requests.get(search_url)
 
             if response.status_code == 200:
@@ -331,10 +356,15 @@ def get_streaming_url(request):
                 }
 
                 for item in items:
-                    if item['title'].lower() == movie_title.lower():
+                    if media_type == 'movie':
+                        item_title = item.get('title')
+                    else:  # TV shows use 'name' instead of 'title'
+                        item_title = item.get('name')
+
+                    if item_title and item_title.lower() == media_title.lower():
                         # Construct URLs
-                        urls['netflix'] = f"https://www.netflix.com/search?q={movie_title.replace(' ', '%20')}"
-                        urls['amazon_prime'] = f"https://www.amazon.com/s?k={movie_title.replace(' ', '+')}"
+                        urls['netflix'] = f"https://www.netflix.com/search?q={media_title.replace(' ', '%20')}"
+                        urls['amazon_prime'] = f"https://www.amazon.com/s?k={media_title.replace(' ', '+')}"
                         break
 
                 return JsonResponse({'success': True, 'urls': urls})
@@ -342,7 +372,6 @@ def get_streaming_url(request):
             return JsonResponse({'success': False, 'message': 'No streaming link found.'})
 
         except Exception as e:
-            print(f"Exception: {str(e)}")
             return JsonResponse({'success': False, 'message': str(e)})
 
     return JsonResponse({'success': False, 'message': 'Invalid request method.'})
