@@ -20,8 +20,23 @@
             z-index: 1001;
             display: flex;
             align-items: center;
-            padding: 55px 20px;
+            justify-content: space-between;
+            padding: 52px 20px;
             box-sizing: border-box;
+        }
+        .header-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+        }
+        .header-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            white-space: nowrap;
+            font-weight: normal;
         }
         .sidebar {
             background-color: #ef476f;
@@ -137,10 +152,14 @@
 
     <div class="header">
         <div class="logo-container">
-        <a href="/">
-            <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo">
-        </a>
+            <a href="/">
+                <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo">
+            </a>
         </div>
+        <div class="header-center">
+            <h1>Popcorn Picks</h1>
+        </div>
+
         <div class="user-buttons">
             {% if user.is_authenticated %}
                 <a href="{% url 'users:userinfo' %}" class="btn btn-secondary-2" id="user-button">{{ user.first_name }}</a>
