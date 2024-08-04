@@ -4,7 +4,6 @@ from . import views
 app_name = 'users'
 urlpatterns = [
     path('', views.home, name="home"),
-    path("movie_recommendation/", views.movie_recommendation, name='movie_recommendation'),
     path("process_movie/", views.process_movie, name='process_movie'),
     path("logout/", views.logout_view, name='logout'),
     path('recommendations/', views.recommendations, name='recommendations'),
@@ -15,5 +14,6 @@ urlpatterns = [
     path('get_streaming_url/', views.get_streaming_url, name='get_streaming_url'),
     path('remove_from_wishlist/', views.remove_from_wishlist, name='remove_from_wishlist'),
     path('remove_from_favorites/', views.remove_from_favorites, name='remove_from_favorites'),
+    path('popcornpicks/', views.popcornpicks_view, name='popcornpicks_view'),
 
 ]

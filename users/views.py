@@ -71,10 +71,9 @@ def home(request):
         return HttpResponse(f"An error occurred: {e}", status=500)
 
 @login_required
-def movie_recommendation(request):
+def popcornpicks_view(request):
     user_name = request.user.first_name.capitalize() if request.user.first_name else ''
-    return render(request, 'moviehome.html', {'user_name': user_name})
-
+    return render(request, 'popcornpicks.html', {'user_name': user_name})
 
 @login_required
 def userinfo_view(request):
