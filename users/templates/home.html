@@ -316,6 +316,31 @@
                 </div>
             </div>
         </div>
+        <div class="row mt-4">
+            <div class="col">
+                <h2 class="mb-4">Trending Shows</h2>
+                <div class="row">
+                    {% for show in trending_shows %}
+                        <div class="col-md-2 mb-4">
+                            <div class="card">
+                                <img src="https://image.tmdb.org/t/p/w500{{ show.poster_path }}" class="card-img-top" alt="{{ show.title }}">
+                                <button class="btn-overlay btn-favorite" data-show-id="{{ show.id }}" data-show-title="{{ show.title }}" data-action="add_to_favorites">💟</button>
+                                <button class="btn-overlay btn-watchlist" data-show-id="{{ show.id }}" data-show-title="{{ show.title }}" data-action="add_to_watchlist">➕</button>
+                                <button class="btn-overlay btn-watch-now" data-show-id="{{ show.id }}" data-show-title="{{ show.title }}" data-action="watch_now">
+                                    <span class="icon">👁️</span> Watch Now
+                                </button>
+                                <div class="text-center mt-2">
+                                    <button class="btn-thumbs-up" data-show-id="{{ show.id }}">👍</button>
+                                    <button class="btn-thumbs-down" data-show-id="{{ show.id }}">👎</button>
+                                </div>
+                                <h5 class="card-title">{{ show.title }}</h5>
+                                <p class="card-rating">Rating: {{ show.vote_average|floatformat:1 }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

@@ -48,17 +48,27 @@ def get_similar_movie(movie_id):
     except requests.exceptions.RequestException:
         return []
 
+
 def home(request):
-    url_trending = 'https://api.themoviedb.org/3/trending/movie/week'
+    url_trending_movies = 'https://api.themoviedb.org/3/trending/movie/week'
+    url_trending_shows = 'https://api.themoviedb.org/3/trending/tv/week'
     params = {'api_key': API_KEY}
+
     try:
-        response_trending = requests.get(url_trending, params=params)
-        response_trending.raise_for_status()
-        trending_data = response_trending.json().get('results', [])[:6]
-        return render(request, 'home.html', {'trending_movies': trending_data})
+        response_trending_movies = requests.get(url_trending_movies, params=params)
+        response_trending_movies.raise_for_status()
+        trending_movies = response_trending_movies.json().get('results', [])[:6]
+
+        response_trending_shows = requests.get(url_trending_shows, params=params)
+        response_trending_shows.raise_for_status()
+        trending_shows = response_trending_shows.json().get('results', [])[:6]
+
+        return render(request, 'home.html', {
+            'trending_movies': trending_movies,
+            'trending_shows': trending_shows
+        })
     except requests.exceptions.RequestException as e:
         return HttpResponse(f"An error occurred: {e}", status=500)
-
 
 @login_required
 def movie_recommendation(request):
