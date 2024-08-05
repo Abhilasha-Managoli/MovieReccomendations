@@ -234,7 +234,7 @@
     </div>
 
     <div class="search-bar">
-        <input type="text" placeholder="Search for movies or TV shows..." id="search-input" value="{{ query }}">
+        <input type="text" placeholder="Search for movies..." id="search-input" value="{{ query }}">
         <button id="search-button">Search</button>
         <ul id="autocomplete-results" class="list-group" style="display: none; position: absolute; z-index: 1000;"></ul>
         <div class="user-buttons">
@@ -247,7 +247,7 @@
         </div>
     </div>
 
-    <div class="container">
+     <div class="container">
         <div class="row">
             {% for movie in recommended_movies %}
             <div class="col-md-4">
@@ -262,6 +262,7 @@
             {% endfor %}
         </div>
     </div>
+
 
     <div class="container">
         {% if success_message %}
@@ -279,14 +280,14 @@
                             <div class="movie">
                                 <div style="position: relative;">
                                     <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }} poster">
-                                    <button class="btn-overlay btn-favorite" data-movie-id="{{ movie.id }}" data-media-type="movie">💟</button>
-                                    <button class="btn-overlay btn-watchlist" data-movie-id="{{ movie.id }}" data-media-type="movie">➕</button>
-                                    <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}" data-media-type="movie">
+                                    <button class="btn-overlay btn-favorite" data-movie-id="{{ movie.id }}">💟</button>
+                                    <button class="btn-overlay btn-watchlist" data-movie-id="{{ movie.id }}">➕</button>
+                                    <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}">
                                         <span class="icon">👁️</span> Watch Now
                                     </button>
                                     <div class="movie-actions">
-                                        <button class="btn-thumbs-up" data-movie-id="{{ movie.id }}" data-media-type="movie">👍</button>
-                                        <button class="btn-thumbs-down" data-movie-id="{{ movie.id }}" data-media-type="movie">👎</button>
+                                        <button class="btn-thumbs-up" data-movie-id="{{ movie.id }}">👍</button>
+                                        <button class="btn-thumbs-down" data-movie-id="{{ movie.id }}">👎</button>
                                     </div>
                                 </div>
                                 <div class="movie-details">
@@ -364,13 +365,11 @@
 
     // Watch Now AJAX
     $('.btn-watch-now').click(function() {
-        var mediaTitle = $(this).data('title'); // Ensure you are passing the media title
-        var mediaType = $(this).data('media-type');
-
+        var movieTitle = $(this).closest('.movie').find('.movie-details h4').text();
         $.ajax({
             type: 'POST',
             url: "{% url 'users:get_streaming_url' %}",
-            data: JSON.stringify({ 'media_title': mediaTitle, 'media_type': mediaType }),
+            data: JSON.stringify({ 'movie_title': movieTitle }),
             contentType: 'application/json',
             success: function(response) {
                 if (response.success) {
@@ -382,10 +381,10 @@
                         } else if (choice === "2" && urls.amazon_prime) {
                             window.location.href = urls.amazon_prime; // Redirect to Amazon Prime
                         } else {
-                            alert('Invalid choice or streaming option not available. Please try again.');
+                            alert('Invalid choice. Please try again.');
                         }
                     } else {
-                        alert('No streaming options found.');
+                        alert('No streaming link found.');
                     }
                 } else {
                     alert('Streaming link not found.');
@@ -397,7 +396,8 @@
         });
     });
 
-    $("#search-input").on("input", function() {
+    // Search Autocomplete
+   $("#search-input").on("input", function() {
         var query = $(this).val();
         if (query.length < 2) {
             $("#autocomplete-results").hide(); // Hide results if input is too short
@@ -427,9 +427,9 @@
                 }
             }
         });
-    });
+   });
 
-
+    // Handle clicks on autocomplete suggestions
     $(document).on("click", ".autocomplete-suggestion", function() {
         var mediaType = $(this).data("media-type");
         var itemId = $(this).data("movie-id");
@@ -437,24 +437,26 @@
         if (mediaType === 'movie') {
             window.location.href = "{% url 'users:recommendations' %}?movie_id=" + itemId;
         } else if (mediaType === 'tv') {
+            // If you have a different URL pattern for TV shows, update this accordingly
             window.location.href = "{% url 'users:recommendations' %}?tv_id=" + itemId;
         }
     });
 
-    $(document).mouseup(function(e) {
-        var container = $("#autocomplete-results");
-        if (!container.is(e.target) && container.has(e.target).length === 0) {
-            container.hide();
-        }
-    });
-
+    // Handle search button click
     $("#search-button").click(function() {
         var query = $("#search-input").val();
         if (query) {
-            window.location.href = "{% url 'users:recommendations' %}?search=" + encodeURIComponent(query);
+            window.location.href = "{% url 'users:recommendations' %}?query=" + encodeURIComponent(query);
         }
     });
-    </script>
+
+    // Hide autocomplete results when clicking outside
+    $(document).click(function(event) {
+        if (!$(event.target).closest('#search-input, #autocomplete-results').length) {
+            $("#autocomplete-results").hide();
+        }
+    });
+</script>
+
 </body>
 </html>
-

@@ -226,10 +226,7 @@ def recommendations(request):
             response.raise_for_status()
             movie_details = response.json()
 
-            # Ensure genre_ids is a list of IDs, not a list of dicts
-            genre_ids = [genre['id'] for genre in movie_details.get('genres', [])] if isinstance(
-                movie_details.get('genres', []), list) and isinstance(movie_details.get('genres', [])[0],
-                                                                      dict) else movie_details.get('genre_ids', [])
+            genre_ids = [genre['id'] for genre in movie_details.get('genres', [])]
             movie_details['genre_names'] = [genres.get(genre_id, 'Unknown') for genre_id in genre_ids]
 
             return render(request, 'moviehome.html', {
@@ -240,6 +237,7 @@ def recommendations(request):
         except requests.exceptions.RequestException as e:
             return HttpResponse(f"An error occurred: {e}", status=500)
 
+    # Handle search by tv_id
     if tv_id:
         url_tv_details = f'https://api.themoviedb.org/3/tv/{tv_id}'
         try:
@@ -258,7 +256,7 @@ def recommendations(request):
         except requests.exceptions.RequestException as e:
             return HttpResponse(f"An error occurred: {e}", status=500)
 
-    # Default response if neither movie_id nor query is provided
+    # Default response if neither movie_id, tv_id, nor query is provided
     return render(request, 'moviehome.html', {
         'movies': [],
         'query': '',
@@ -337,13 +335,9 @@ def get_streaming_url(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            media_title = data.get('media_title')
-            media_type = data.get('media_type')  # Get whether it's a movie or a TV show
+            movie_title = data.get('movie_title')
 
-            if media_type not in ['movie', 'tv']:
-                return JsonResponse({'success': False, 'message': 'Invalid media type.'})
-
-            search_url = f"https://api.themoviedb.org/3/search/{media_type}?api_key={API_KEY}&query={media_title}"
+            search_url = f"https://api.themoviedb.org/3/search/movie?api_key={API_KEY}&query={movie_title}"
             response = requests.get(search_url)
 
             if response.status_code == 200:
@@ -356,15 +350,10 @@ def get_streaming_url(request):
                 }
 
                 for item in items:
-                    if media_type == 'movie':
-                        item_title = item.get('title')
-                    else:  # TV shows use 'name' instead of 'title'
-                        item_title = item.get('name')
-
-                    if item_title and item_title.lower() == media_title.lower():
+                    if item['title'].lower() == movie_title.lower():
                         # Construct URLs
-                        urls['netflix'] = f"https://www.netflix.com/search?q={media_title.replace(' ', '%20')}"
-                        urls['amazon_prime'] = f"https://www.amazon.com/s?k={media_title.replace(' ', '+')}"
+                        urls['netflix'] = f"https://www.netflix.com/search?q={movie_title.replace(' ', '%20')}"
+                        urls['amazon_prime'] = f"https://www.amazon.com/s?k={movie_title.replace(' ', '+')}"
                         break
 
                 return JsonResponse({'success': True, 'urls': urls})
@@ -372,6 +361,7 @@ def get_streaming_url(request):
             return JsonResponse({'success': False, 'message': 'No streaming link found.'})
 
         except Exception as e:
+            print(f"Exception: {str(e)}")
             return JsonResponse({'success': False, 'message': str(e)})
 
     return JsonResponse({'success': False, 'message': 'Invalid request method.'})
