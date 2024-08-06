@@ -223,6 +223,39 @@
             height: auto;
             margin-right: 10px;
         }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 60%; /* Adjust this value as needed */
+            max-width: 600px; /* Adjust this value as needed */
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
 
     </style>
 </head>
@@ -234,7 +267,7 @@
     </div>
 
     <div class="search-bar">
-        <input type="text" placeholder="Search for movies..." id="search-input" value="{{ query }}">
+        <input type="text" placeholder="Search for movies and TV shows..." id="search-input" value="{{ query }}">
         <button id="search-button">Search</button>
         <ul id="autocomplete-results" class="list-group" style="display: none; position: absolute; z-index: 1000;"></ul>
         <div class="user-buttons">
@@ -247,7 +280,7 @@
         </div>
     </div>
 
-     <div class="container">
+    <div class="container">
         <div class="row">
             {% for movie in recommended_movies %}
             <div class="col-md-4">
@@ -262,7 +295,6 @@
             {% endfor %}
         </div>
     </div>
-
 
     <div class="container">
         {% if success_message %}
@@ -282,7 +314,7 @@
                                     <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }} poster">
                                     <button class="btn-overlay btn-favorite" data-movie-id="{{ movie.id }}">💟</button>
                                     <button class="btn-overlay btn-watchlist" data-movie-id="{{ movie.id }}">➕</button>
-                                    <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}">
+                                    <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}" data-movie-title="{% if movie.title %}{{ movie.title }}{% else %}{{ movie.name }}{% endif %}">
                                         <span class="icon">👁️</span> Watch Now
                                     </button>
                                     <div class="movie-actions">
@@ -307,6 +339,16 @@
         </div>
     </div>
 
+    <!-- Modal -->
+    <div id="watchNowModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <p>Choose where to watch:</p>
+            <button id="watch-now-netflix">Netflix</button>
+            <button id="watch-now-amazon">Amazon Prime</button>
+        </div>
+    </div>
+
     <script>
     // CSRF Token Setup
     $.ajaxSetup({
@@ -315,7 +357,7 @@
                 let cookieValue = null;
                 if (document.cookie && document.cookie !== '') {
                     const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
+                    for (let i = 0; cookies.length; i++) {
                         const cookie = cookies[i].trim();
                         if (cookie.substring(0, name.length + 1) === (name + '=')) {
                             cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
@@ -362,42 +404,49 @@
             }
         });
     });
-
-    // Watch Now AJAX
+    // Watch Now Button Click
     $('.btn-watch-now').click(function() {
-        var movieTitle = $(this).closest('.movie').find('.movie-details h4').text();
-        $.ajax({
-            type: 'POST',
-            url: "{% url 'users:get_streaming_url' %}",
-            data: JSON.stringify({ 'movie_title': movieTitle }),
-            contentType: 'application/json',
-            success: function(response) {
-                if (response.success) {
-                    var urls = response.urls;
-                    if (urls.netflix || urls.amazon_prime) {
-                        var choice = prompt("Choose a streaming service:\n1. Netflix\n2. Amazon Prime", "1");
-                        if (choice === "1" && urls.netflix) {
-                            window.location.href = urls.netflix; // Redirect to Netflix
-                        } else if (choice === "2" && urls.amazon_prime) {
-                            window.location.href = urls.amazon_prime; // Redirect to Amazon Prime
-                        } else {
-                            alert('Invalid choice. Please try again.');
-                        }
-                    } else {
-                        alert('No streaming link found.');
-                    }
-                } else {
-                    alert('Streaming link not found.');
-                }
-            },
-            error: function() {
-                alert('An error occurred.');
-            }
-        });
+        var movieTitle = $(this).data('movie-title') || $(this).data('movie-name');
+        if (movieTitle) {
+            $('#watchNowModal').data('movie-title', movieTitle).show();
+        } else {
+            console.error('Movie title or TV show name is undefined');
+        }
+    });
+
+    // Modal Close Button Click
+    $('.close-button').click(function() {
+        $('#watchNowModal').hide();
+    });
+
+    // Watch Now - Netflix Button Click
+    $('#watch-now-netflix').click(function() {
+        var movieTitle = $('#watchNowModal').data('movie-title') || $('#watchNowModal').data('movie-name');
+        if (movieTitle) {
+            var searchUrl = "https://www.netflix.com/search?q=" + encodeURIComponent(movieTitle);
+            console.log('Netflix URL:', searchUrl);
+            window.open(searchUrl, '_blank');
+        } else {
+            console.error('Movie title or TV show name is undefined');
+        }
+        $('#watchNowModal').hide();
+    });
+
+    // Watch Now - Amazon Prime Button Click
+    $('#watch-now-amazon').click(function() {
+        var movieTitle = $('#watchNowModal').data('movie-title') || $('#watchNowModal').data('movie-name');
+        if (movieTitle) {
+            var searchUrl = "https://www.amazon.com/s?k=" + encodeURIComponent(movieTitle) + "&i=instant-video";
+            console.log('Amazon URL:', searchUrl);
+            window.open(searchUrl, '_blank');
+        } else {
+            console.error('Movie title or TV show name is undefined');
+        }
+        $('#watchNowModal').hide();
     });
 
     // Search Autocomplete
-   $("#search-input").on("input", function() {
+    $("#search-input").on("input", function() {
         var query = $(this).val();
         if (query.length < 2) {
             $("#autocomplete-results").hide(); // Hide results if input is too short
@@ -442,21 +491,18 @@
         }
     });
 
-    // Handle search button click
-    $("#search-button").click(function() {
+    $("#search-button").on("click", function() {
         var query = $("#search-input").val();
-        if (query) {
-            window.location.href = "{% url 'users:recommendations' %}?query=" + encodeURIComponent(query);
-        }
+        window.location.href = "{% url 'users:recommendations' %}?q=" + encodeURIComponent(query);
     });
 
     // Hide autocomplete results when clicking outside
-    $(document).click(function(event) {
-        if (!$(event.target).closest('#search-input, #autocomplete-results').length) {
+    $(document).on("click", function(event) {
+        if (!$(event.target).closest("#search-input, #autocomplete-results").length) {
             $("#autocomplete-results").hide();
         }
     });
-</script>
 
+    </script>
 </body>
 </html>

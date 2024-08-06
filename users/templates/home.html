@@ -247,6 +247,26 @@
             height: auto;
             margin-right: 10px;
         }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 60%; /* Adjust this value as needed */
+            max-width: 600px; /* Adjust this value as needed */
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -302,8 +322,8 @@
                                 <a href="{% url 'users:recommendations' %}?movie_id={{ movie.id }}">
                                     <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
                                 </a>
-                                <button class="btn-overlay btn-favorite" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}" data-action="add_to_favorites">💟</button>
-                                <button class="btn-overlay btn-watchlist" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}" data-action="add_to_watchlist">➕</button>
+                                <button class="btn-overlay btn-favorite" data-movie-id="{{ movie.id }}"  data-action="add_to_favorites">💟</button>
+                                <button class="btn-overlay btn-watchlist" data-movie-id="{{ movie.id }}"  data-action="add_to_watchlist">➕</button>
                                 <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}" data-action="watch_now">
                                     <span class="icon">👁️</span> Watch Now
                                 </button>
@@ -331,9 +351,9 @@
                                 <a href="{% url 'users:recommendations' %}?tv_id={{ show.id }}">
                                     <img src="https://image.tmdb.org/t/p/w500{{ show.poster_path }}" class="card-img-top" alt="{{ show.title }}">
                                 </a>
-                                <button class="btn-overlay btn-favorite" data-show-id="{{ show.id }}" data-show-title="{{ show.title }}" data-action="add_to_favorites">💟</button>
-                                <button class="btn-overlay btn-watchlist" data-show-id="{{ show.id }}" data-show-title="{{ show.title }}" data-action="add_to_watchlist">➕</button>
-                                <button class="btn-overlay btn-watch-now" data-show-id="{{ show.id }}" data-show-title="{{ show.title }}" data-action="watch_now">
+                                <button class="btn-overlay btn-favorite" data-show-id="{{ show.id }}"  data-action="add_to_favorites">💟</button>
+                                <button class="btn-overlay btn-watchlist" data-show-id="{{ show.id }}" data-action="add_to_watchlist">➕</button>
+                                <button class="btn-overlay btn-watch-now" data-show-id="{{ show.id }}" data-show-title="{{ show.name }}" data-action="watch_now">
                                     <span class="icon">👁️</span> Watch Now
                                 </button>
                                 <div class="text-center mt-2">
@@ -349,53 +369,50 @@
             </div>
         </div>
 
+        <!-- Modal -->
+    <div id="watchNowModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <p>Choose where to watch:</p>
+            <button id="watch-now-netflix">Netflix</button>
+            <button id="watch-now-amazon">Amazon Prime</button>
+        </div>
+    </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
     $(document).ready(function() {
         var isAuthenticated = '{{ user.is_authenticated|yesno:"true,false" }}' === 'true';
 
-        document.querySelectorAll('.btn-overlay').forEach(function(button) {
+            document.querySelectorAll('.btn-overlay').forEach(function(button) {
             button.addEventListener('click', function() {
                 var movieId = this.getAttribute('data-movie-id');
+                var showId = this.getAttribute('data-show-id');
                 var movieTitle = this.getAttribute('data-movie-title');
+                var showTitle = this.getAttribute('data-show-title');
                 var action = this.getAttribute('data-action');
 
                 if (isAuthenticated) {
                     if (action === 'watch_now') {
-                        $.ajax({
-                            url: "{% url 'users:get_streaming_url' %}",
-                            method: "POST",
-                            data: JSON.stringify({ movie_title: movieTitle }),
-                            contentType: "application/json",
-                            headers: { "X-CSRFToken": "{{ csrf_token }}" },
-                            success: function(response) {
-                                if (response.success) {
-                                    var servicesAvailable = {
-                                        netflix: response.netflix_url,
-                                        amazon: response.amazon_url
-                                    };
+                        // Show the modal
+                        $('#watchNowModal').show();
 
-                                    if (servicesAvailable.netflix || servicesAvailable.amazon) {
-                                        // Show choice dialog if at least one service is available
-                                        var choice = prompt("Choose a streaming service:\n1. Netflix\n2. Amazon Prime", "1");
-                                        if (choice === '1' && servicesAvailable.netflix) {
-                                            window.location.href = servicesAvailable.netflix; // Redirect to Netflix
-                                        } else if (choice === '2' && servicesAvailable.amazon) {
-                                            window.location.href = servicesAvailable.amazon; // Redirect to Amazon Prime
-                                        } else {
-                                            alert('Invalid choice or service not available. Please try again.');
-                                        }
-                                    } else {
-                                        alert('Streaming service is unavailable.');
-                                    }
-                                } else {
-                                    alert('Streaming link not found.');
-                                }
-                            },
-                            error: function() {
-                                alert('An error occurred.');
-                            }
+                        // Set the appropriate title for the modal
+                        var title = movieTitle ? movieTitle : showTitle;
+
+                        // Handle Watch Now button clicks
+                        $('#watch-now-netflix').off('click').on('click', function() {
+                            var searchUrl = movieTitle
+                                ? `https://www.netflix.com/search?q=${encodeURIComponent(movieTitle)}`
+                                : `https://www.netflix.com/search?q=${encodeURIComponent(showTitle)}`;
+                            window.open(searchUrl, '_blank');
+                        });
+
+                        $('#watch-now-amazon').off('click').on('click', function() {
+                            var searchUrl = movieTitle
+                                ? `https://www.amazon.com/s?k=${encodeURIComponent(movieTitle)}`
+                                : `https://www.amazon.com/s?k=${encodeURIComponent(showTitle)}`;
+                            window.open(searchUrl, '_blank');
                         });
                     } else {
                         var url = action === 'add_to_favorites' ? "{% url 'users:add_to_favorites' %}" : "{% url 'users:add_to_wishlist' %}";
@@ -427,7 +444,17 @@
                 }
             });
         });
+    // Close modal functionality
+        $('.close-button').on('click', function() {
+            $('#watchNowModal').hide();
+        });
 
+        // Close modal when clicking outside of the modal
+        $(window).on('click', function(event) {
+            if ($(event.target).is('#watchNowModal')) {
+                $('#watchNowModal').hide();
+            }
+        });
         $("#search-input").on("input", function() {
             var query = $(this).val();
             if (query.length < 2) {
