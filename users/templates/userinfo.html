@@ -197,49 +197,88 @@
                 <div id="wishlist" style="display:none;">
                     <h2>Watchlist</h2>
                     <div class="row">
-                        {% for movie in wishlist %}
-                            <div class="col-md-4 mb-4">
-                                <div class="card">
-                                    <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
-                                    <div class="card-body">
-                                        <h5 class="card-title">{{ movie.title }}</h5>
-                                        <p class="card-text genres">
-                                            <strong>Genres:</strong> {% if movie.genre_names %}{{ movie.genre_names|join:", " }}{% else %}N/A{% endif %}
-                                        </p>
-                                        <p class="card-text">
-                                            <strong>Description:</strong> {{ movie.overview }}
-                                        </p>
-                                        <button class="btn btn-danger delete-button" data-movie-title="{{ movie.title }}" onclick="deleteMovie('wishlist', '{{ movie.title }}')">Delete</button>
+                        {% if wishlist_movies or wishlist_shows %}
+                            {% for movie in wishlist_movies %}
+                                <div class="col-md-4 mb-4">
+                                    <div class="card">
+                                        <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ movie.title }}</h5>
+                                            <p class="card-text genres">
+                                                <strong>Genres:</strong> {% if movie.genre_names %}{{ movie.genre_names|join:", " }}{% else %}N/A{% endif %}
+                                            </p>
+                                            <p class="card-text">
+                                                <strong>Description:</strong> {{ movie.overview }}
+                                            </p>
+                                            <button class="btn btn-danger delete-button" data-movie-title="{{ movie.title }}" onclick="deleteMovie('wishlist', '{{ movie.title }}')">Delete</button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        {% empty %}
-                            <p>No movies in your watchlist.</p>
-                        {% endfor %}
+                            {% endfor %}
+                            {% for show in wishlist_shows %}
+                                <div class="col-md-4 mb-4">
+                                    <div class="card">
+                                        <img src="https://image.tmdb.org/t/p/w500{{ show.poster_path }}" class="card-img-top" alt="{{ show.name }}">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ show.name|default:show.title }}</h5>
+                                            <p class="card-text genres">
+                                                <strong>Genres:</strong> {% if show.genre_names %}{{ show.genre_names|join:", " }}{% else %}N/A{% endif %}
+                                            </p>
+                                            <p class="card-text">
+                                                <strong>Description:</strong> {{ show.overview }}
+                                            </p>
+                                            <button class="btn btn-danger delete-button" data-show-name="{{ show.name|default:show.title }}" onclick="deleteShow('wishlist', '{{ show.title }}')">Delete</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p>No items in your watchlist.</p>
+                        {% endif %}
                     </div>
                 </div>
+
                 <div id="favorites" style="display:none;">
                     <h2>Favorites</h2>
                     <div class="row">
-                        {% for movie in favorites %}
-                            <div class="col-md-4 mb-4">
-                                <div class="card">
-                                    <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
-                                    <div class="card-body">
-                                        <h5 class="card-title">{{ movie.title }}</h5>
-                                        <p class="card-text genres">
-                                            <strong>Genres:</strong> {% if movie.genre_names %}{{ movie.genre_names|join:", " }}{% else %}N/A{% endif %}
-                                        </p>
-                                        <p class="card-text">
-                                            <strong>Description:</strong> {{ movie.overview }}
-                                        </p>
-                                        <button class="btn btn-danger delete-button" data-movie-title="{{ movie.title }}" onclick="deleteMovie('favorites', '{{ movie.title }}')">Delete</button>
+                        {% if favorites_movies or favorites_shows %}
+                            {% for movie in favorites_movies %}
+                                <div class="col-md-4 mb-4">
+                                    <div class="card">
+                                        <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ movie.title }}</h5>
+                                            <p class="card-text genres">
+                                                <strong>Genres:</strong> {% if movie.genre_names %}{{ movie.genre_names|join:", " }}{% else %}N/A{% endif %}
+                                            </p>
+                                            <p class="card-text">
+                                                <strong>Description:</strong> {{ movie.overview }}
+                                            </p>
+                                            <button class="btn btn-danger delete-button" data-movie-title="{{ movie.title }}" onclick="deleteMovie('favorites', '{{ movie.title }}')">Delete</button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        {% empty %}
-                            <p>No movies in your favorites.</p>
-                        {% endfor %}
+                            {% endfor %}
+                            {% for show in favorites_shows %}
+                                <div class="col-md-4 mb-4">
+                                    <div class="card">
+                                        <img src="https://image.tmdb.org/t/p/w500{{ show.poster_path }}" class="card-img-top" alt="{{ show.name }}">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ show.name|default:show.title }}</h5>
+                                            <p class="card-text genres">
+                                                <strong>Genres:</strong> {% if show.genre_names %}{{ show.genre_names|join:", " }}{% else %}N/A{% endif %}
+                                            </p>
+                                            <p class="card-text">
+                                                <strong>Description:</strong> {{ show.overview }}
+                                            </p>
+                                            <button class="btn btn-danger delete-button" data-show-name="{{ show.name|default:show.title }}" onclick="deleteShow('favorites', '{{ show.title }}')">Delete</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p>No items in your favorites.</p>
+                        {% endif %}
                     </div>
                 </div>
             </main>
@@ -288,6 +327,26 @@
                     location.reload(); // Refresh the page to reflect the changes
                 } else {
                     alert('Failed to delete movie: ' + data.message);
+                }
+            });
+        }
+
+        function deleteShow(listType, showName) {
+            const url = listType === 'wishlist' ? '{% url "users:remove_from_wishlist" %}' : '{% url "users:remove_from_favorites" %}';
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ show_title: showName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload(); // Refresh the page to reflect the changes
+                } else {
+                    alert('Failed to delete show: ' + data.message);
                 }
             });
         }

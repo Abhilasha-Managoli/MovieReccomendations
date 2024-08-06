@@ -291,8 +291,8 @@
                                     </div>
                                 </div>
                                 <div class="movie-details">
-                                    <h4>{% if movie.title %}{{ movie.title }}{% else %}{{ movie.name }}{% endif %}</h4>
-                                    <p>Release Date: {% if movie.release_date %}{{ movie.release_date }}{% elif movie.first_air_date %}{{ movie.first_air_date }}{% else %}N/A{% endif %}</p>
+                                    <h4>{{ movie.title }}</h4>
+                                    <p>Release Date: {{ movie.release_date }}</p>
                                     <p>Genres: {% if movie.genre_names %}{{ movie.genre_names|join:", " }}{% else %}N/A{% endif %}</p>
                                     <p>Rating: {{ movie.vote_average }}</p>
                                     <p>{{ movie.overview }}</p>

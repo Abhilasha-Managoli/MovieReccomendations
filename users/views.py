@@ -75,6 +75,7 @@ def popcornpicks_view(request):
     user_name = request.user.first_name.capitalize() if request.user.first_name else ''
     return render(request, 'popcornpicks.html', {'user_name': user_name})
 
+
 @login_required
 def userinfo_view(request):
     wishlist = Wishlist.objects.filter(user=request.user)
@@ -82,59 +83,87 @@ def userinfo_view(request):
 
     movie_details = []
     favorite_details = []
+    tv_show_details = []
+    favorite_show_details = []
 
-    def fetch_movie_details(movie_title):
-        search_url = f'https://api.themoviedb.org/3/search/movie'
-        params = {'api_key': API_KEY, 'query': movie_title}
+    def fetch_movie_details(title, content_type):
+        if content_type == 'movie':
+            search_url = f'https://api.themoviedb.org/3/search/movie'
+        elif content_type == 'tv':
+            search_url = f'https://api.themoviedb.org/3/search/tv'
+        else:
+            return None
+
+        params = {'api_key': API_KEY, 'query': title}
         try:
             response = requests.get(search_url, params=params)
             response.raise_for_status()
             search_results = response.json().get('results', [])
             if search_results:
-                movie_id = search_results[0]['id']
-                url_movie_details = f'https://api.themoviedb.org/3/movie/{movie_id}'
-                details_response = requests.get(url_movie_details, params={'api_key': API_KEY})
+                item_id = search_results[0]['id']
+                if content_type == 'movie':
+                    details_url = f'https://api.themoviedb.org/3/movie/{item_id}'
+                elif content_type == 'tv':
+                    details_url = f'https://api.themoviedb.org/3/tv/{item_id}'
+                details_response = requests.get(details_url, params={'api_key': API_KEY})
                 details_response.raise_for_status()
                 details = details_response.json()
-                logging.debug(f"Movie details for '{movie_title}': {details}")
+                logging.debug(f"{content_type.capitalize()} details for '{title}': {details}")
                 return {
-                    'title': details.get('title'),
+                    'title': details.get('title') if content_type == 'movie' else details.get('name'),
                     'poster_path': details.get('poster_path'),
                     'genre_ids': [genre['id'] for genre in details.get('genres', [])],
-                    'overview': details.get('overview')
+                    'overview': details.get('overview'),
+                    'content_type': content_type
                 }
         except requests.exceptions.RequestException as e:
-            logging.error(f"Error fetching movie details for '{movie_title}': {e}")
+            logging.error(f"Error fetching {content_type} details for '{title}': {e}")
             return None
 
-    for movie in wishlist:
-        details = fetch_movie_details(movie.movie_title)
+    for item in wishlist:
+        # Try fetching as a movie first
+        details = fetch_movie_details(item.movie_title, 'movie')
         if details:
             movie_details.append(details)
+        else:
+            # If not a movie, try fetching as a TV show
+            details = fetch_movie_details(item.movie_title, 'tv')
+            if details:
+                tv_show_details.append(details)
 
-    for movie in favorites:
-        details = fetch_movie_details(movie.movie_title)
+    for item in favorites:
+        # Try fetching as a movie first
+        details = fetch_movie_details(item.movie_title, 'movie')
         if details:
             favorite_details.append(details)
+        else:
+            # If not a movie, try fetching as a TV show
+            details = fetch_movie_details(item.movie_title, 'tv')
+            if details:
+                favorite_show_details.append(details)
 
     genres = fetch_genres()
     logging.debug(f"Genres fetched: {genres}")
 
-    for movie in movie_details:
-        genre_names = [genres.get(genre_id, 'Unknown') for genre_id in movie.get('genre_ids', [])]
-        movie['genre_names'] = genre_names
-        logging.debug(f"Wishlist movie '{movie['title']}' genres: {genre_names}")
+    def attach_genre_names(items):
+        for item in items:
+            genre_names = [genres.get(genre_id, 'Unknown') for genre_id in item.get('genre_ids', [])]
+            item['genre_names'] = genre_names
+            logging.debug(f"{item.get('title', item.get('name'))} genres: {genre_names}")
 
-    for movie in favorite_details:
-        genre_names = [genres.get(genre_id, 'Unknown') for genre_id in movie.get('genre_ids', [])]
-        movie['genre_names'] = genre_names
-        logging.debug(f"Favorite movie '{movie['title']}' genres: {genre_names}")
+    attach_genre_names(movie_details)
+    attach_genre_names(favorite_details)
+    attach_genre_names(tv_show_details)
+    attach_genre_names(favorite_show_details)
 
     return render(request, 'userinfo.html', {
         'user': request.user,
-        'wishlist': movie_details,
-        'favorites': favorite_details,
+        'wishlist_movies': movie_details,
+        'favorites_movies': favorite_details,
+        'wishlist_shows': tv_show_details,
+        'favorites_shows': favorite_show_details,
     })
+
 
 @csrf_exempt
 def remove_from_wishlist(request):
