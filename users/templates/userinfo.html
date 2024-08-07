@@ -64,7 +64,11 @@
         }
         .card {
             background-color: #f8ffe5;
+            margin-top: 20px;
             border: none;
+            border-radius: 0;
+            position: relative;
+            overflow: hidden;
         }
         .card-body {
             background-color: #f8ffe5;
@@ -129,6 +133,7 @@
             height: 90px;
         }
         .card-img-top {
+            position: relative;
             width: 100%;
             max-width: 200px;
             height: auto;
@@ -146,6 +151,77 @@
         .delete-button {
             margin-top: 10px;
             display: block;
+        }
+        .btn-overlay {
+            position: absolute;
+            background-color: transparent;
+            border: 2px solid white;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .card:hover img {
+            opacity: 0.5;
+        }
+        .card:hover .btn-overlay {
+            opacity: 1;
+        }
+
+        .btn-watch-now {
+            position: absolute;
+            top: 175px; /* Adjust as needed to place the button on top of the poster */
+            left: 50%;
+            transform: translateX(-50%); /* Center the button horizontally */
+            width: 70%; /* Adjust width to fit content */
+            max-width: 170px; /* Limit maximum width */
+            padding: 8px 16px;
+            background-color: rgba(255, 255, 255, 0.3); /* Slightly transparent background */
+            text-align: center;
+            border-radius: 5px; /* Rounded corners */
+            transition: opacity 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+            z-index: 10; /* Ensure the button is on top */
+            opacity: 0; /* Initially hidden */
+        }
+         .btn-watch-now:hover {
+            background-color: rgba(255, 255, 255, 0.5);
+            border-color: transparent;
+        }
+         /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 60%; /* Adjust this value as needed */
+            max-width: 600px; /* Adjust this value as needed */
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -204,6 +280,9 @@
                                 <div class="col-md-4 mb-4">
                                     <div class="card">
                                         <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
+                                        <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}" data-action="watch_now">
+                                            <span class="icon">👁️</span> Watch Now
+                                         </button>
                                         <div class="card-body">
                                             <h5 class="card-title">{{ movie.title }}</h5>
                                             <p class="card-text genres">
@@ -224,6 +303,9 @@
                                 <div class="col-md-4 mb-4">
                                     <div class="card">
                                         <img src="https://image.tmdb.org/t/p/w500{{ show.poster_path }}" class="card-img-top" alt="{{ show.name }}">
+                                        <button class="btn-overlay btn-watch-now" data-tv-id="{{ show.id }}" data-show-title="{{ show.title }}" data-action="watch_now">
+                                            <span class="icon">👁️</span> Watch Now
+                                         </button>
                                         <div class="card-body">
                                             <h5 class="card-title">{{ show.title }}</h5>
                                             <p class="card-text genres">
@@ -255,6 +337,9 @@
                                 <div class="col-md-4 mb-4">
                                     <div class="card">
                                         <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
+                                        <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}" data-action="watch_now">
+                                            <span class="icon">👁️</span> Watch Now
+                                         </button>
                                         <div class="card-body">
                                             <h5 class="card-title">{{ movie.title }}</h5>
                                             <p class="card-text genres">
@@ -275,6 +360,9 @@
                                 <div class="col-md-4 mb-4">
                                     <div class="card">
                                         <img src="https://image.tmdb.org/t/p/w500{{ show.poster_path }}" class="card-img-top" alt="{{ show.name }}">
+                                        <button class="btn-overlay btn-watch-now" data-tv-id="{{ show.id }}" data-show-title="{{ show.title }}" data-action="watch_now">
+                                            <span class="icon">👁️</span> Watch Now
+                                         </button>
                                         <div class="card-body">
                                             <h5 class="card-title">{{ show.title }}</h5>
                                             <p class="card-text genres">
@@ -299,7 +387,17 @@
             </main>
         </div>
     </div>
+        <!-- Modal -->
+    <div id="watchNowModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <p>Choose where to watch:</p>
+            <button id="watch-now-netflix">Netflix</button>
+            <button id="watch-now-amazon">Amazon Prime</button>
+        </div>
+    </div>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         document.getElementById('personal-info-tab').addEventListener('click', function() {
             document.getElementById('personal-info').style.display = 'block';
@@ -309,6 +407,7 @@
             document.getElementById('wishlist-tab').classList.remove('active');
             document.getElementById('favorites-tab').classList.remove('active');
         });
+
         document.getElementById('wishlist-tab').addEventListener('click', function() {
             document.getElementById('personal-info').style.display = 'none';
             document.getElementById('wishlist').style.display = 'block';
@@ -317,6 +416,7 @@
             document.getElementById('personal-info-tab').classList.remove('active');
             document.getElementById('favorites-tab').classList.remove('active');
         });
+
         document.getElementById('favorites-tab').addEventListener('click', function() {
             document.getElementById('personal-info').style.display = 'none';
             document.getElementById('wishlist').style.display = 'none';
@@ -324,6 +424,52 @@
             this.classList.add('active');
             document.getElementById('personal-info-tab').classList.remove('active');
             document.getElementById('wishlist-tab').classList.remove('active');
+        });
+
+        $(document).ready(function() {
+            var isAuthenticated = '{{ user.is_authenticated|yesno:"true,false" }}' === 'true';
+
+            document.querySelectorAll('.btn-overlay').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    var movieId = this.getAttribute('data-movie-id');
+                    var showId = this.getAttribute('data-tv-id');
+                    var movieTitle = this.getAttribute('data-movie-title');
+                    var showTitle = this.getAttribute('data-show-title');
+                    var action = this.getAttribute('data-action');
+
+                    if (isAuthenticated) {
+                        if (action === 'watch_now') {
+                            // Show the modal
+                            $('#watchNowModal').show();
+
+                            // Handle Watch Now button clicks
+                            $('#watch-now-netflix').off('click').on('click', function() {
+                                var searchUrl = movieTitle
+                                    ? `https://www.netflix.com/search?q=${encodeURIComponent(movieTitle)}`
+                                    : `https://www.netflix.com/search?q=${encodeURIComponent(showTitle)}`;
+                                window.open(searchUrl, '_blank');
+                            });
+
+                            $('#watch-now-amazon').off('click').on('click', function() {
+                                var searchUrl = movieTitle
+                                    ? `https://www.amazon.com/s?k=${encodeURIComponent(movieTitle)}`
+                                    : `https://www.amazon.com/s?k=${encodeURIComponent(showTitle)}`;
+                                window.open(searchUrl, '_blank');
+                            });
+                        }
+                    }
+                });
+            });
+
+            $('.close-button').on('click', function() {
+                $('#watchNowModal').hide();
+            });
+
+            $(window).on('click', function(event) {
+                if ($(event.target).is('#watchNowModal')) {
+                    $('#watchNowModal').hide();
+                }
+            });
         });
     </script>
 </body>
