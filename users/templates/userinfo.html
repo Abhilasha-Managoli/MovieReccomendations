@@ -194,6 +194,7 @@
                     <p>Username: {{ user.username }}</p>
                     <p>Email: {{ user.email }}</p>
                 </div>
+                <!-- Watchlist -->
                 <div id="wishlist" style="display:none;">
                     <h2>Watchlist</h2>
                     <div class="row">
@@ -210,7 +211,7 @@
                                             <p class="card-text">
                                                 <strong>Description:</strong> {{ movie.overview }}
                                             </p>
-                                            <button class="btn btn-danger delete-button" data-movie-title="{{ movie.title }}" onclick="deleteMovie('wishlist', '{{ movie.title }}')">Delete</button>
+                                            <button class="btn btn-danger delete-button" data-movie-id="{{ movie.id }}" onclick="deleteMovie('wishlist', '{{ movie.id }}')">Delete</button>
                                         </div>
                                     </div>
                                 </div>
@@ -220,14 +221,14 @@
                                     <div class="card">
                                         <img src="https://image.tmdb.org/t/p/w500{{ show.poster_path }}" class="card-img-top" alt="{{ show.name }}">
                                         <div class="card-body">
-                                            <h5 class="card-title">{{ show.name|default:show.title }}</h5>
+                                            <h5 class="card-title">{{ show.name }}</h5>
                                             <p class="card-text genres">
                                                 <strong>Genres:</strong> {% if show.genre_names %}{{ show.genre_names|join:", " }}{% else %}N/A{% endif %}
                                             </p>
                                             <p class="card-text">
                                                 <strong>Description:</strong> {{ show.overview }}
                                             </p>
-                                            <button class="btn btn-danger delete-button" data-show-name="{{ show.name|default:show.title }}" onclick="deleteShow('wishlist', '{{ show.title }}')">Delete</button>
+                                            <button class="btn btn-danger delete-button" data-show-id="{{ show.id }}" onclick="deleteShow('wishlist', '{{ show.id }}')">Delete</button>
                                         </div>
                                     </div>
                                 </div>
@@ -238,6 +239,7 @@
                     </div>
                 </div>
 
+                <!-- Favorites -->
                 <div id="favorites" style="display:none;">
                     <h2>Favorites</h2>
                     <div class="row">
@@ -254,7 +256,7 @@
                                             <p class="card-text">
                                                 <strong>Description:</strong> {{ movie.overview }}
                                             </p>
-                                            <button class="btn btn-danger delete-button" data-movie-title="{{ movie.title }}" onclick="deleteMovie('favorites', '{{ movie.title }}')">Delete</button>
+                                            <button class="btn btn-danger delete-button" data-movie-id="{{ movie.id }}" onclick="deleteMovie('favorites', '{{ movie.id }}')">Delete</button>
                                         </div>
                                     </div>
                                 </div>
@@ -264,14 +266,14 @@
                                     <div class="card">
                                         <img src="https://image.tmdb.org/t/p/w500{{ show.poster_path }}" class="card-img-top" alt="{{ show.name }}">
                                         <div class="card-body">
-                                            <h5 class="card-title">{{ show.name|default:show.title }}</h5>
+                                            <h5 class="card-title">{{ show.name }}</h5>
                                             <p class="card-text genres">
                                                 <strong>Genres:</strong> {% if show.genre_names %}{{ show.genre_names|join:", " }}{% else %}N/A{% endif %}
                                             </p>
                                             <p class="card-text">
                                                 <strong>Description:</strong> {{ show.overview }}
                                             </p>
-                                            <button class="btn btn-danger delete-button" data-show-name="{{ show.name|default:show.title }}" onclick="deleteShow('favorites', '{{ show.title }}')">Delete</button>
+                                            <button class="btn btn-danger delete-button" data-show-id="{{ show.id }}" onclick="deleteShow('favorites', '{{ show.id }}')">Delete</button>
                                         </div>
                                     </div>
                                 </div>
@@ -311,7 +313,7 @@
             document.getElementById('wishlist-tab').classList.remove('active');
         });
 
-        function deleteMovie(listType, movieTitle) {
+        function deleteMovie(listType, movieId) {
             const url = listType === 'wishlist' ? '{% url "users:remove_from_wishlist" %}' : '{% url "users:remove_from_favorites" %}';
             fetch(url, {
                 method: 'POST',
@@ -319,7 +321,7 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify({ movie_title: movieTitle })
+                body: JSON.stringify({ movie_id: movieId })
             })
             .then(response => response.json())
             .then(data => {
@@ -331,7 +333,7 @@
             });
         }
 
-        function deleteShow(listType, showName) {
+        function deleteShow(listType, showId) {
             const url = listType === 'wishlist' ? '{% url "users:remove_from_wishlist" %}' : '{% url "users:remove_from_favorites" %}';
             fetch(url, {
                 method: 'POST',
@@ -339,7 +341,7 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify({ show_title: showName })
+                body: JSON.stringify({ tv_id: showId })
             })
             .then(response => response.json())
             .then(data => {

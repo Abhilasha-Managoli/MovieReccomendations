@@ -312,62 +312,62 @@
         </div>
 
         <!-- Trending Movies -->
-        <div class="row mt-4">
-            <div class="col">
-                <h2 class="mb-4">Trending Movies</h2>
-                <div class="row">
-                    {% for movie in trending_movies %}
-                        <div class="col-md-2 mb-4">
-                            <div class="card">
-                                <a href="{% url 'users:recommendations' %}?movie_id={{ movie.id }}">
-                                    <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
-                                </a>
-                                <button class="btn-overlay btn-favorite" data-movie-id="{{ movie.id }}"  data-action="add_to_favorites">💟</button>
-                                <button class="btn-overlay btn-watchlist" data-movie-id="{{ movie.id }}"  data-action="add_to_watchlist">➕</button>
-                                <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}" data-action="watch_now">
-                                    <span class="icon">👁️</span> Watch Now
-                                </button>
-                                <div class="text-center mt-2">
-                                    <button class="btn-thumbs-up" data-movie-id="{{ movie.id }}">👍</button>
-                                    <button class="btn-thumbs-down" data-movie-id="{{ movie.id }}">👎</button>
-                                </div>
-                                <a href="{% url 'users:recommendations' %}?movie_id={{ movie.id }}" class="card-title">{{ movie.title }}</a>
-                                <p class="card-rating">Rating: {{ movie.vote_average|floatformat:1 }}</p>
+    <div class="row mt-4">
+        <div class="col">
+            <h2 class="mb-4">Trending Movies</h2>
+            <div class="row">
+                {% for movie in trending_movies %}
+                    <div class="col-md-2 mb-4">
+                        <div class="card">
+                            <a href="{% url 'users:recommendations' %}?movie_id={{ movie.id }}">
+                                <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
+                            </a>
+                            <button class="btn-overlay btn-favorite" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}" data-action="add_to_favorites">💟</button>
+                            <button class="btn-overlay btn-watchlist" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}" data-action="add_to_watchlist">➕</button>
+                            <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}" data-action="watch_now">
+                                <span class="icon">👁️</span> Watch Now
+                            </button>
+                            <div class="text-center mt-2">
+                                <button class="btn-thumbs-up" data-movie-id="{{ movie.id }}">👍</button>
+                                <button class="btn-thumbs-down" data-movie-id="{{ movie.id }}">👎</button>
                             </div>
+                            <a href="{% url 'users:recommendations' %}?movie_id={{ movie.id }}" class="card-title">{{ movie.title }}</a>
+                            <p class="card-rating">Rating: {{ movie.vote_average|floatformat:1 }}</p>
                         </div>
-                    {% endfor %}
-                </div>
+                    </div>
+                {% endfor %}
             </div>
         </div>
+    </div>
 
-        <!-- Trending Shows -->
-        <div class="row mt-4">
-            <div class="col">
-                <h2 class="mb-4">Trending Shows</h2>
-                <div class="row">
-                    {% for show in trending_shows %}
-                        <div class="col-md-2 mb-4">
-                            <div class="card">
-                                <a href="{% url 'users:recommendations' %}?tv_id={{ show.id }}">
-                                    <img src="https://image.tmdb.org/t/p/w500{{ show.poster_path }}" class="card-img-top" alt="{{ show.title }}">
-                                </a>
-                                <button class="btn-overlay btn-favorite" data-show-id="{{ show.id }}"  data-action="add_to_favorites">💟</button>
-                                <button class="btn-overlay btn-watchlist" data-show-id="{{ show.id }}" data-action="add_to_watchlist">➕</button>
-                                <button class="btn-overlay btn-watch-now" data-show-id="{{ show.id }}" data-show-title="{{ show.name }}" data-action="watch_now">
-                                    <span class="icon">👁️</span> Watch Now
-                                </button>
-                                <div class="text-center mt-2">
-                                    <button class="btn-thumbs-up" data-show-id="{{ show.id }}">👍</button>
-                                    <button class="btn-thumbs-down" data-show-id="{{ show.id }}">👎</button>
-                                </div>
-                                <a href="{% url 'users:recommendations' %}?tv_id={{ show.id }}" class="card-title">{{ show.name }}</a>
-                                <p class="card-rating">Rating: {{ show.vote_average|floatformat:1 }}</p>
+    <!-- Trending Shows -->
+    <div class="row mt-4">
+        <div class="col">
+            <h2 class="mb-4">Trending Shows</h2>
+            <div class="row">
+                {% for show in trending_shows %}
+                    <div class="col-md-2 mb-4">
+                        <div class="card">
+                            <a href="{% url 'users:recommendations' %}?tv_id={{ show.id }}">
+                                <img src="https://image.tmdb.org/t/p/w500{{ show.poster_path }}" class="card-img-top" alt="{{ show.name }}">
+                            </a>
+                            <button class="btn-overlay btn-favorite" data-tv-id="{{ show.id }}" data-show-title="{{ show.name }}" data-action="add_to_favorites">💟</button>
+                            <button class="btn-overlay btn-watchlist" data-tv-id="{{ show.id }}" data-show-title="{{ show.name }}" data-action="add_to_watchlist">➕</button>
+                            <button class="btn-overlay btn-watch-now" data-tv-id="{{ show.id }}" data-show-title="{{ show.name }}" data-action="watch_now">
+                                <span class="icon">👁️</span> Watch Now
+                            </button>
+                            <div class="text-center mt-2">
+                                <button class="btn-thumbs-up" data-tv-id="{{ show.id }}">👍</button>
+                                <button class="btn-thumbs-down" data-tv-id="{{ show.id }}">👎</button>
                             </div>
+                            <a href="{% url 'users:recommendations' %}?tv_id={{ show.id }}" class="card-title">{{ show.name }}</a>
+                            <p class="card-rating">Rating: {{ show.vote_average|floatformat:1 }}</p>
                         </div>
-                    {% endfor %}
-                </div>
+                    </div>
+                {% endfor %}
             </div>
         </div>
+    </div>
 
         <!-- Modal -->
     <div id="watchNowModal" class="modal">
@@ -384,10 +384,10 @@
     $(document).ready(function() {
         var isAuthenticated = '{{ user.is_authenticated|yesno:"true,false" }}' === 'true';
 
-            document.querySelectorAll('.btn-overlay').forEach(function(button) {
+        document.querySelectorAll('.btn-overlay').forEach(function(button) {
             button.addEventListener('click', function() {
                 var movieId = this.getAttribute('data-movie-id');
-                var showId = this.getAttribute('data-show-id');
+                var showId = this.getAttribute('data-tv-id');
                 var movieTitle = this.getAttribute('data-movie-title');
                 var showTitle = this.getAttribute('data-show-title');
                 var action = this.getAttribute('data-action');
@@ -414,33 +414,38 @@
                                 : `https://www.amazon.com/s?k=${encodeURIComponent(showTitle)}`;
                             window.open(searchUrl, '_blank');
                         });
-                    } else {
-                        var url = action === 'add_to_favorites' ? "{% url 'users:add_to_favorites' %}" : "{% url 'users:add_to_wishlist' %}";
-                        var message = action === 'add_to_favorites' ? 'Movie added to favorites successfully' : 'Movie added to watchlist successfully';
+                    } else if (action === 'add_to_favorites' || action === 'add_to_watchlist') {
+                        var id = movieId || showId;
+                        var type = movieId ? 'movie' : 'show';
+                        var data = {
+                            movie_id:movieId || null,
+                            tv_id:showId || null,
+                            movie_title: movieTitle || null,
+                            show_title: showTitle || null
+                        }
 
-                        fetch(url, {
-                            method: 'POST',
+                        $.ajax({
+                            type: 'POST',
+                            url: action === 'add_to_favorites' ? '{% url "users:add_to_favorites" %}' : '{% url "users:add_to_wishlist" %}',
+                            data: JSON.stringify(data),
+                            contentType: 'application/json',
                             headers: {
-                                'Content-Type': 'application/json',
                                 'X-CSRFToken': '{{ csrf_token }}'
                             },
-                            body: JSON.stringify({ movie_title: movieTitle })
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                alert(message);
-                            } else {
-                                alert('An error occurred: ' + data.message);
+                            success: function(response) {
+                                if (response.success) {
+                                    alert(response.message);
+                                } else {
+                                    alert(response.message);
+                                }
+                            },
+                            error: function() {
+                                alert('An error occurred.');
                             }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert('An error occurred.');
                         });
                     }
                 } else {
-                    alert('Please log in to perform this action.');
+                    alert('You must be logged in to perform this action.');
                 }
             });
         });

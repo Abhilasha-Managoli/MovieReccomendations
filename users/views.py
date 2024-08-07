@@ -11,7 +11,6 @@ from django.views.decorators.http import require_POST
 
 from users.models import Wishlist, Favorites
 
-
 API_KEY = "6d9d64446aa322b6e954111c63b34344"
 
 
@@ -36,6 +35,7 @@ def fetch_genres():
         logging.error(f"Error fetching genres: {e}")
 
     return genres
+
 
 def get_similar_movie(movie_id):
     url_similar = f'https://api.themoviedb.org/3/movie/{movie_id}/similar'
@@ -70,6 +70,7 @@ def home(request):
     except requests.exceptions.RequestException as e:
         return HttpResponse(f"An error occurred: {e}", status=500)
 
+
 @login_required
 def popcornpicks_view(request):
     user_name = request.user.first_name.capitalize() if request.user.first_name else ''
@@ -78,84 +79,94 @@ def popcornpicks_view(request):
 
 @login_required
 def userinfo_view(request):
+    # Fetch user's watchlist and favorites
     wishlist = Wishlist.objects.filter(user=request.user)
     favorites = Favorites.objects.filter(user=request.user)
 
+    # Lists to store movie and TV show details
     movie_details = []
     favorite_details = []
     tv_show_details = []
     favorite_show_details = []
 
-    def fetch_movie_details(title, content_type):
-        if content_type == 'movie':
-            search_url = f'https://api.themoviedb.org/3/search/movie'
-        elif content_type == 'tv':
-            search_url = f'https://api.themoviedb.org/3/search/tv'
-        else:
-            return None
-
-        params = {'api_key': API_KEY, 'query': title}
+    # Function to fetch movie details
+    def fetch_movie_details(item_id):
+        search_url = f'https://api.themoviedb.org/3/movie/{item_id}'
+        params = {'api_key': API_KEY}
         try:
             response = requests.get(search_url, params=params)
             response.raise_for_status()
-            search_results = response.json().get('results', [])
-            if search_results:
-                item_id = search_results[0]['id']
-                if content_type == 'movie':
-                    details_url = f'https://api.themoviedb.org/3/movie/{item_id}'
-                elif content_type == 'tv':
-                    details_url = f'https://api.themoviedb.org/3/tv/{item_id}'
-                details_response = requests.get(details_url, params={'api_key': API_KEY})
-                details_response.raise_for_status()
-                details = details_response.json()
-                logging.debug(f"{content_type.capitalize()} details for '{title}': {details}")
-                return {
-                    'title': details.get('title') if content_type == 'movie' else details.get('name'),
-                    'poster_path': details.get('poster_path'),
-                    'genre_ids': [genre['id'] for genre in details.get('genres', [])],
-                    'overview': details.get('overview'),
-                    'content_type': content_type
-                }
+            details = response.json()
+            logging.debug(f"Fetched movie details for ID '{item_id}': {details}")
+            return {
+                'title': details.get('title'),
+                'poster_path': details.get('poster_path'),
+                'genre_ids': [genre['id'] for genre in details.get('genres', [])],
+                'overview': details.get('overview'),
+                'content_type': 'movie'
+            }
         except requests.exceptions.RequestException as e:
-            logging.error(f"Error fetching {content_type} details for '{title}': {e}")
+            logging.error(f"Error fetching movie details for ID '{item_id}': {e}")
             return None
 
+    # Function to fetch TV show details
+    def fetch_tv_details(item_id):
+        search_url = f'https://api.themoviedb.org/3/tv/{item_id}'
+        params = {'api_key': API_KEY}
+        try:
+            response = requests.get(search_url, params=params)
+            response.raise_for_status()
+            details = response.json()
+            logging.debug(f"Fetched TV show details for ID '{item_id}': {details}")
+            return {
+                'title': details.get('name'),
+                'poster_path': details.get('poster_path'),
+                'genre_ids': [genre['id'] for genre in details.get('genres', [])],
+                'overview': details.get('overview'),
+                'content_type': 'tv'
+            }
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Error fetching TV show details for ID '{item_id}': {e}")
+            return None
+
+    # Fetch details for items in the watchlist
     for item in wishlist:
-        # Try fetching as a movie first
-        details = fetch_movie_details(item.movie_title, 'movie')
-        if details:
-            movie_details.append(details)
-        else:
-            # If not a movie, try fetching as a TV show
-            details = fetch_movie_details(item.movie_title, 'tv')
+        if item.movie_id:
+            details = fetch_movie_details(item.movie_id)
+            if details:
+                movie_details.append(details)
+        elif item.tv_id:
+            details = fetch_tv_details(item.tv_id)
             if details:
                 tv_show_details.append(details)
 
+    # Fetch details for items in the favorites
     for item in favorites:
-        # Try fetching as a movie first
-        details = fetch_movie_details(item.movie_title, 'movie')
-        if details:
-            favorite_details.append(details)
-        else:
-            # If not a movie, try fetching as a TV show
-            details = fetch_movie_details(item.movie_title, 'tv')
+        if item.movie_id:
+            details = fetch_movie_details(item.movie_id)
+            if details:
+                favorite_details.append(details)
+        elif item.tv_id:
+            details = fetch_tv_details(item.tv_id)
             if details:
                 favorite_show_details.append(details)
 
+    # Fetch genres and attach genre names to items
     genres = fetch_genres()
-    logging.debug(f"Genres fetched: {genres}")
+    logging.debug(f"Fetched genres: {genres}")
 
     def attach_genre_names(items):
         for item in items:
             genre_names = [genres.get(genre_id, 'Unknown') for genre_id in item.get('genre_ids', [])]
             item['genre_names'] = genre_names
-            logging.debug(f"{item.get('title', item.get('name'))} genres: {genre_names}")
+            logging.debug(f"{item.get('title')} genres: {genre_names}")
 
     attach_genre_names(movie_details)
     attach_genre_names(favorite_details)
     attach_genre_names(tv_show_details)
     attach_genre_names(favorite_show_details)
 
+    # Render the userinfo template with the fetched data
     return render(request, 'userinfo.html', {
         'user': request.user,
         'wishlist_movies': movie_details,
@@ -165,37 +176,57 @@ def userinfo_view(request):
     })
 
 
-@csrf_exempt
+@login_required
+@csrf_protect
 def remove_from_wishlist(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        movie_title = data.get('movie_title')
-        user = request.user
-        print(f"Removing from wishlist: {movie_title} for user {user.username}")
+        movie_id = data.get('movie_id')
+        tv_id = data.get('tv_id')
 
-        try:
-            movie = Wishlist.objects.get(user=user, movie_title=movie_title)
-            movie.delete()
-            return JsonResponse({'success': True})
-        except Wishlist.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Movie not found in wishlist.'})
-    return JsonResponse({'success': False, 'message': 'Invalid request.'})
+        if movie_id:
+            try:
+                wishlist_item = Wishlist.objects.get(user=request.user, movie_id=movie_id)
+                wishlist_item.delete()
+                return JsonResponse({'success': True, 'message': 'Movie removed from watchlist successfully.'})
+            except Wishlist.DoesNotExist:
+                return JsonResponse({'success': False, 'message': 'Movie not found in watchlist.'})
+        elif tv_id:
+            try:
+                wishlist_item = Wishlist.objects.get(user=request.user, tv_id=tv_id)
+                wishlist_item.delete()
+                return JsonResponse({'success': True, 'message': 'Show removed from watchlist successfully.'})
+            except Wishlist.DoesNotExist:
+                return JsonResponse({'success': False, 'message': 'Show not found in watchlist.'})
 
-@csrf_exempt
+    return HttpResponse(status=405)
+
+
+@login_required
+@csrf_protect
 def remove_from_favorites(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        movie_title = data.get('movie_title')
-        user = request.user
-        print(f"Removing from favorites: {movie_title} for user {user.username}")
+        movie_id = data.get('movie_id')
+        tv_id = data.get('tv_id')
 
-        try:
-            movie = Favorites.objects.get(user=user, movie_title=movie_title)
-            movie.delete()
-            return JsonResponse({'success': True})
-        except Favorites.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Movie not found in favorites.'})
-    return JsonResponse({'success': False, 'message': 'Invalid request.'})
+        if movie_id:
+            try:
+                favorite_item = Favorites.objects.get(user=request.user, movie_id=movie_id)
+                favorite_item.delete()
+                return JsonResponse({'success': True, 'message': 'Movie removed from favorites successfully.'})
+            except Favorites.DoesNotExist:
+                return JsonResponse({'success': False, 'message': 'Movie not found in favorites.'})
+        elif tv_id:
+            try:
+                favorite_item = Favorites.objects.get(user=request.user, tv_id=tv_id)
+                favorite_item.delete()
+                return JsonResponse({'success': True, 'message': 'Show removed from favorites successfully.'})
+            except Favorites.DoesNotExist:
+                return JsonResponse({'success': False, 'message': 'Show not found in favorites.'})
+
+    return HttpResponse(status=405)
+
 
 @login_required
 def process_movie(request):
@@ -292,31 +323,51 @@ def recommendations(request):
         'user_name': user_name
     })
 
-@login_required
-@csrf_protect
-def add_to_wishlist(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        movie_title = data.get('movie_title')
-        if Wishlist.objects.filter(user=request.user, movie_title=movie_title).exists():
-            return JsonResponse({'success': False, 'message': 'Movie already added to watchlist!'})
-
-        Wishlist.objects.create(user=request.user, movie_title=movie_title)
-        return JsonResponse({'success': True, 'message': 'Movie added to watchlist successfully.'})
-    return HttpResponse(status=405)
-
 
 @login_required
 @csrf_protect
 def add_to_favorites(request):
     if request.method == 'POST':
         data = json.loads(request.body)
+        movie_id = data.get('movie_id')
+        tv_id = data.get('tv_id')
         movie_title = data.get('movie_title')
-        if Favorites.objects.filter(user=request.user, movie_title=movie_title).exists():
-            return JsonResponse({'success': False, 'message': 'Movie already added to favorites!'})
+        show_title = data.get('show_title')
 
-        Favorites.objects.create(user=request.user, movie_title=movie_title)
-        return JsonResponse({'success': True, 'message': 'Movie added to Favorites successfully.'})
+        if movie_id:
+            if Favorites.objects.filter(user=request.user, movie_id=movie_id).exists():
+                return JsonResponse({'success': False, 'message': 'Movie already added to favorites!'})
+            Favorites.objects.create(user=request.user, movie_id=movie_id, movie_title=movie_title)
+        elif tv_id:
+            if Favorites.objects.filter(user=request.user, tv_id=tv_id).exists():
+                return JsonResponse({'success': False, 'message': 'Show already added to favorites!'})
+            Favorites.objects.create(user=request.user, tv_id=tv_id, show_title=show_title)
+
+        return JsonResponse({'success': True, 'message': 'Movie/TV Show added to favorites successfully.'})
+
+    return HttpResponse(status=405)
+
+@login_required
+@csrf_protect
+def add_to_wishlist(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        movie_id = data.get('movie_id')
+        tv_id = data.get('tv_id')
+        movie_title = data.get('movie_title')
+        show_title = data.get('show_title')
+
+        if movie_id:
+            if Wishlist.objects.filter(user=request.user, movie_id=movie_id).exists():
+                return JsonResponse({'success': False, 'message': 'Movie already added to watchlist!'})
+            Wishlist.objects.create(user=request.user, movie_id=movie_id, movie_title=movie_title)
+        elif tv_id:
+            if Wishlist.objects.filter(user=request.user, tv_id=tv_id).exists():
+                return JsonResponse({'success': False, 'message': 'Show already added to watchlist!'})
+            Wishlist.objects.create(user=request.user, tv_id=tv_id, show_title=show_title)
+
+        return JsonResponse({'success': True, 'message': 'Movie/TV Show added to watchlist successfully.'})
+
     return HttpResponse(status=405)
 
 
@@ -333,7 +384,8 @@ def autocomplete(request):
             suggestions = [{
                 'id': item['id'],
                 'title': item.get('title') or item.get('name'),
-                'poster_url': f"https://image.tmdb.org/t/p/w200{item.get('poster_path')}" if item.get('poster_path') else None,
+                'poster_url': f"https://image.tmdb.org/t/p/w200{item.get('poster_path')}" if item.get(
+                    'poster_path') else None,
                 'media_type': item.get('media_type')
             } for item in results if item.get('media_type') in ['movie', 'tv']]
 
@@ -342,7 +394,6 @@ def autocomplete(request):
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse([], safe=False)
-
 
 
 def search_results(request):
@@ -358,4 +409,3 @@ def search_results(request):
         return render(request, 'search_results.html', {'movies': movies, 'query': query})
     except requests.exceptions.RequestException as e:
         return HttpResponse(f"An error occurred: {e}", status=500)
-
