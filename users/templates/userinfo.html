@@ -221,7 +221,7 @@
                                     <div class="card">
                                         <img src="https://image.tmdb.org/t/p/w500{{ show.poster_path }}" class="card-img-top" alt="{{ show.name }}">
                                         <div class="card-body">
-                                            <h5 class="card-title">{{ show.name }}</h5>
+                                            <h5 class="card-title">{{ show.title }}</h5>
                                             <p class="card-text genres">
                                                 <strong>Genres:</strong> {% if show.genre_names %}{{ show.genre_names|join:", " }}{% else %}N/A{% endif %}
                                             </p>
@@ -266,7 +266,7 @@
                                     <div class="card">
                                         <img src="https://image.tmdb.org/t/p/w500{{ show.poster_path }}" class="card-img-top" alt="{{ show.name }}">
                                         <div class="card-body">
-                                            <h5 class="card-title">{{ show.name }}</h5>
+                                            <h5 class="card-title">{{ show.title }}</h5>
                                             <p class="card-text genres">
                                                 <strong>Genres:</strong> {% if show.genre_names %}{{ show.genre_names|join:", " }}{% else %}N/A{% endif %}
                                             </p>

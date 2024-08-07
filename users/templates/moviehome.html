@@ -311,15 +311,39 @@
                         {% for movie in movies %}
                             <div class="movie">
                                 <div style="position: relative;">
-                                    <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }} poster">
-                                    <button class="btn-overlay btn-favorite" data-movie-id="{{ movie.id }}">💟</button>
-                                    <button class="btn-overlay btn-watchlist" data-movie-id="{{ movie.id }}">➕</button>
-                                    <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}" data-movie-title="{% if movie.title %}{{ movie.title }}{% else %}{{ movie.name }}{% endif %}">
+                                    <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{% if movie.title %}{{ movie.title }}{% else %}{{ movie.name }}{% endif %} poster">
+                                    <button class="btn-overlay btn-favorite"
+                                            data-movie-id="{% if movie.title %}{{ movie.id }}{% endif %}"
+                                            data-tv-id="{% if movie.name %}{{ movie.id }}{% endif %}"
+                                            data-type="{% if movie.title %}movie{% else %}tv{% endif %}">
+                                        💟
+                                    </button>
+                                    <button class="btn-overlay btn-watchlist"
+                                            data-movie-id="{% if movie.title %}{{ movie.id }}{% endif %}"
+                                            data-tv-id="{% if movie.name %}{{ movie.id }}{% endif %}"
+                                            data-type="{% if movie.title %}movie{% else %}tv{% endif %}">
+                                        ➕
+                                    </button>
+                                    <button class="btn-overlay btn-watch-now"
+                                            data-movie-id="{% if movie.title %}{{ movie.id }}{% endif %}"
+                                            data-tv-id="{% if movie.name %}{{ movie.id }}{% endif %}"
+                                            data-movie-title="{% if movie.title %}{{ movie.title }}{% else %}{{ movie.name }}{% endif %}"
+                                            data-type="{% if movie.title %}movie{% else %}tv{% endif %}">
                                         <span class="icon">👁️</span> Watch Now
                                     </button>
                                     <div class="movie-actions">
-                                        <button class="btn-thumbs-up" data-movie-id="{{ movie.id }}">👍</button>
-                                        <button class="btn-thumbs-down" data-movie-id="{{ movie.id }}">👎</button>
+                                        <button class="btn-thumbs-up"
+                                                data-movie-id="{% if movie.title %}{{ movie.id }}{% endif %}"
+                                                data-tv-id="{% if movie.name %}{{ movie.id }}{% endif %}"
+                                                data-type="{% if movie.title %}movie{% else %}tv{% endif %}">
+                                            👍
+                                        </button>
+                                        <button class="btn-thumbs-down"
+                                                data-movie-id="{% if movie.title %}{{ movie.id }}{% endif %}"
+                                                data-tv-id="{% if movie.name %}{{ movie.id }}{% endif %}"
+                                                data-type="{% if movie.title %}movie{% else %}tv{% endif %}">
+                                            👎
+                                        </button>
                                     </div>
                                 </div>
                                 <div class="movie-details">
@@ -333,7 +357,7 @@
                         {% endfor %}
                     </div>
                 {% else %}
-                    <p>No movies found.</p>
+                    <p>No results found.</p>
                 {% endif %}
             </div>
         </div>
@@ -377,13 +401,21 @@
         }
     });
 
-    // Add to Favorites AJAX
     $('.btn-favorite').click(function() {
-        var movieTitle = $(this).closest('.movie').find('.movie-details h4').text();
+        var movieId = $(this).data('movie-id');
+        var tvId = $(this).data('tv-id');
+        var movieTitle = $(this).data('type') === 'movie' ? $(this).closest('.movie').find('.movie-details h4').text() : '';
+        var showTitle = $(this).data('type') === 'tv' ? $(this).closest('.movie').find('.movie-details h4').text() : '';
+
         $.ajax({
             type: 'POST',
             url: "{% url 'users:add_to_favorites' %}",
-            data: JSON.stringify({ 'movie_title': movieTitle }),
+            data: JSON.stringify({
+                'movie_id': movieId,
+                'tv_id': tvId,
+                'movie_title': movieTitle,
+                'show_title': showTitle
+            }),
             contentType: 'application/json',
             success: function(response) {
                 alert(response.message);
@@ -393,11 +425,20 @@
 
     // Add to Watchlist AJAX
     $('.btn-watchlist').click(function() {
-        var movieTitle = $(this).closest('.movie').find('.movie-details h4').text();
+        var movieId = $(this).data('movie-id');
+        var tvId = $(this).data('tv-id');
+        var movieTitle = $(this).data('type') === 'movie' ? $(this).closest('.movie').find('.movie-details h4').text() : '';
+        var showTitle = $(this).data('type') === 'tv' ? $(this).closest('.movie').find('.movie-details h4').text() : '';
+
         $.ajax({
             type: 'POST',
             url: "{% url 'users:add_to_wishlist' %}",
-            data: JSON.stringify({ 'movie_title': movieTitle }),
+            data: JSON.stringify({
+                'movie_id': movieId,
+                'tv_id': tvId,
+                'movie_title': movieTitle,
+                'show_title': showTitle
+            }),
             contentType: 'application/json',
             success: function(response) {
                 alert(response.message);
