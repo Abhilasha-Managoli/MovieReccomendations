@@ -10,9 +10,11 @@ urlpatterns = [
     path('userinfo/', views.userinfo_view, name='userinfo'),
     path('add_to_wishlist/', views.add_to_wishlist, name='add_to_wishlist'),
     path('add_to_favorites/', views.add_to_favorites, name="add_to_favorites"),
+    path('delete_from_watchlist/<int:movie_id>/', views.delete_from_watchlist, name='delete_from_watchlist'),
+    path('delete_show_from_watchlist/<int:tv_id>/', views.delete_show_from_watchlist, name='delete_show_from_watchlist'),
+    path('delete_from_favorites/<int:movie_id>/', views.delete_from_favorites, name='delete_from_favorites'),
+    path('delete_show_from_favorites/<int:tv_id>/', views.delete_show_from_favorites, name='delete_show_from_favorites'),
     path('autocomplete/', views.autocomplete, name='autocomplete'),
-    path('remove_from_wishlist/', views.remove_from_wishlist, name='remove_from_wishlist'),
-    path('remove_from_favorites/', views.remove_from_favorites, name='remove_from_favorites'),
     path('popcornpicks/', views.popcornpicks_view, name='popcornpicks_view'),
 
 ]

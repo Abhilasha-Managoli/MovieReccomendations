@@ -3,11 +3,14 @@ import logging
 
 import requests
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
-from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+logger = logging.getLogger(__name__)
+
 
 from users.models import Wishlist, Favorites
 
@@ -99,6 +102,7 @@ def userinfo_view(request):
             details = response.json()
             logging.debug(f"Fetched movie details for ID '{item_id}': {details}")
             return {
+                'id': item_id,
                 'title': details.get('title'),
                 'poster_path': details.get('poster_path'),
                 'genre_ids': [genre['id'] for genre in details.get('genres', [])],
@@ -119,6 +123,7 @@ def userinfo_view(request):
             details = response.json()
             logging.debug(f"Fetched TV show details for ID '{item_id}': {details}")
             return {
+                'id': item_id,
                 'title': details.get('name'),
                 'poster_path': details.get('poster_path'),
                 'genre_ids': [genre['id'] for genre in details.get('genres', [])],
@@ -175,58 +180,30 @@ def userinfo_view(request):
         'favorites_shows': favorite_show_details,
     })
 
+@login_required
+def delete_from_watchlist(request, movie_id):
+    item = get_object_or_404(Wishlist, user=request.user, movie_id=movie_id)
+    item.delete()
+    return redirect('users:userinfo')  # Redirect to the user info page or any relevant page
 
 @login_required
-@csrf_protect
-def remove_from_wishlist(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        movie_id = data.get('movie_id')
-        tv_id = data.get('tv_id')
-
-        if movie_id:
-            try:
-                wishlist_item = Wishlist.objects.get(user=request.user, movie_id=movie_id)
-                wishlist_item.delete()
-                return JsonResponse({'success': True, 'message': 'Movie removed from watchlist successfully.'})
-            except Wishlist.DoesNotExist:
-                return JsonResponse({'success': False, 'message': 'Movie not found in watchlist.'})
-        elif tv_id:
-            try:
-                wishlist_item = Wishlist.objects.get(user=request.user, tv_id=tv_id)
-                wishlist_item.delete()
-                return JsonResponse({'success': True, 'message': 'Show removed from watchlist successfully.'})
-            except Wishlist.DoesNotExist:
-                return JsonResponse({'success': False, 'message': 'Show not found in watchlist.'})
-
-    return HttpResponse(status=405)
+def delete_show_from_watchlist(request, tv_id):
+    wishlist_item = get_object_or_404(Wishlist, tv_id=tv_id, user=request.user)
+    wishlist_item.delete()
+    return redirect('users:userinfo')
 
 
 @login_required
-@csrf_protect
-def remove_from_favorites(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        movie_id = data.get('movie_id')
-        tv_id = data.get('tv_id')
+def delete_from_favorites(request, movie_id):
+    item = get_object_or_404(Favorites, user=request.user, movie_id=movie_id)
+    item.delete()
+    return redirect('users:userinfo')  # Redirect to the user info page or any relevant page
 
-        if movie_id:
-            try:
-                favorite_item = Favorites.objects.get(user=request.user, movie_id=movie_id)
-                favorite_item.delete()
-                return JsonResponse({'success': True, 'message': 'Movie removed from favorites successfully.'})
-            except Favorites.DoesNotExist:
-                return JsonResponse({'success': False, 'message': 'Movie not found in favorites.'})
-        elif tv_id:
-            try:
-                favorite_item = Favorites.objects.get(user=request.user, tv_id=tv_id)
-                favorite_item.delete()
-                return JsonResponse({'success': True, 'message': 'Show removed from favorites successfully.'})
-            except Favorites.DoesNotExist:
-                return JsonResponse({'success': False, 'message': 'Show not found in favorites.'})
-
-    return HttpResponse(status=405)
-
+@login_required
+def delete_show_from_favorites(request, tv_id):
+    favorite_item = get_object_or_404(Favorites, tv_id=tv_id, user=request.user)
+    favorite_item.delete()
+    return redirect('users:userinfo')
 
 @login_required
 def process_movie(request):

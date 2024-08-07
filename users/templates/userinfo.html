@@ -1,4 +1,5 @@
 {% load static %}
+{% csrf_token %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -211,7 +212,10 @@
                                             <p class="card-text">
                                                 <strong>Description:</strong> {{ movie.overview }}
                                             </p>
-                                            <button class="btn btn-danger delete-button" data-movie-id="{{ movie.id }}" onclick="deleteMovie('wishlist', '{{ movie.id }}')">Delete</button>
+                                             <form action="{% url 'users:delete_from_watchlist' movie.id %}" method="post" class="delete-button">
+                                                {% csrf_token %}
+                                                 <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
@@ -228,7 +232,10 @@
                                             <p class="card-text">
                                                 <strong>Description:</strong> {{ show.overview }}
                                             </p>
-                                            <button class="btn btn-danger delete-button" data-show-id="{{ show.id }}" onclick="deleteShow('wishlist', '{{ show.id }}')">Delete</button>
+                                            <form action="{% url 'users:delete_show_from_watchlist' show.id %}" method="post" class="delete-button">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
@@ -256,7 +263,10 @@
                                             <p class="card-text">
                                                 <strong>Description:</strong> {{ movie.overview }}
                                             </p>
-                                            <button class="btn btn-danger delete-button" data-movie-id="{{ movie.id }}" onclick="deleteMovie('favorites', '{{ movie.id }}')">Delete</button>
+                                            <form action="{% url 'users:delete_from_favorites' movie.id %}" method="post" class="delete-button">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
@@ -273,7 +283,10 @@
                                             <p class="card-text">
                                                 <strong>Description:</strong> {{ show.overview }}
                                             </p>
-                                            <button class="btn btn-danger delete-button" data-show-id="{{ show.id }}" onclick="deleteShow('favorites', '{{ show.id }}')">Delete</button>
+                                            <form action="{% url 'users:delete_show_from_favorites' show.id %}" method="post" class="delete-button">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
@@ -312,46 +325,6 @@
             document.getElementById('personal-info-tab').classList.remove('active');
             document.getElementById('wishlist-tab').classList.remove('active');
         });
-
-        function deleteMovie(listType, movieId) {
-            const url = listType === 'wishlist' ? '{% url "users:remove_from_wishlist" %}' : '{% url "users:remove_from_favorites" %}';
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({ movie_id: movieId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload(); // Refresh the page to reflect the changes
-                } else {
-                    alert('Failed to delete movie: ' + data.message);
-                }
-            });
-        }
-
-        function deleteShow(listType, showId) {
-            const url = listType === 'wishlist' ? '{% url "users:remove_from_wishlist" %}' : '{% url "users:remove_from_favorites" %}';
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({ tv_id: showId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload(); // Refresh the page to reflect the changes
-                } else {
-                    alert('Failed to delete show: ' + data.message);
-                }
-            });
-        }
     </script>
 </body>
 </html>
