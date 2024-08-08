@@ -76,8 +76,36 @@ def home(request):
 
 @login_required
 def popcornpicks_view(request):
-    user_name = request.user.first_name.capitalize() if request.user.first_name else ''
-    return render(request, 'popcornpicks.html', {'user_name': user_name})
+    if request.user.is_authenticated:
+        favorites = Favorites.objects.filter(user=request.user)
+        favorite_ids = [fav.movie_id for fav in favorites if fav.movie_id]
+
+        # Initialize recommendations list
+        recommendations = []
+
+        if favorite_ids:
+            # Call the TMDB API to get similar movies
+            api_key: API_KEY
+            for movie_id in favorite_ids:
+                url = f'https://api.themoviedb.org/3/movie/{movie_id}/recommendations'
+                params = {
+                    'api_key': API_KEY,
+                    'language': 'en-US',
+                    'page': 1
+                }
+                response = requests.get(url, params=params).json()
+                recommendations.extend(response.get('results', []))
+
+            # Limit the number of recommendations to 6
+            recommendations = recommendations[:6]
+
+        context = {
+            'recommendations': recommendations
+        }
+
+        return render(request, 'popcornpicks.html', context)
+    else:
+        return redirect('account_login')
 
 
 @login_required
