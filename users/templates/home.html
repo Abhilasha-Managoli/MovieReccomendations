@@ -102,20 +102,6 @@
         .card:hover .btn-watch-now {
             opacity: 1;
         }
-        .btn-thumbs-up,
-        .btn-thumbs-down {
-            position: relative;
-            background-color: transparent;
-            border: none;
-            color: #ef476f;
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-        .btn-thumbs-up:hover,
-        .btn-thumbs-down:hover {
-            color: #d6406c;
-        }
         .card-rating {
             font-size: 0.9rem;
             color: #6c757d;
@@ -327,10 +313,6 @@
                             <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}" data-action="watch_now">
                                 <span class="icon">👁️</span> Watch Now
                             </button>
-                            <div class="text-center mt-2">
-                                <button class="btn-thumbs-up" data-movie-id="{{ movie.id }}">👍</button>
-                                <button class="btn-thumbs-down" data-movie-id="{{ movie.id }}">👎</button>
-                            </div>
                             <a href="{% url 'users:recommendations' %}?movie_id={{ movie.id }}" class="card-title">{{ movie.title }}</a>
                             <p class="card-rating">Rating: {{ movie.vote_average|floatformat:1 }}</p>
                         </div>
@@ -356,10 +338,6 @@
                             <button class="btn-overlay btn-watch-now" data-tv-id="{{ show.id }}" data-show-title="{{ show.name }}" data-action="watch_now">
                                 <span class="icon">👁️</span> Watch Now
                             </button>
-                            <div class="text-center mt-2">
-                                <button class="btn-thumbs-up" data-tv-id="{{ show.id }}">👍</button>
-                                <button class="btn-thumbs-down" data-tv-id="{{ show.id }}">👎</button>
-                            </div>
                             <a href="{% url 'users:recommendations' %}?tv_id={{ show.id }}" class="card-title">{{ show.name }}</a>
                             <p class="card-rating">Rating: {{ show.vote_average|floatformat:1 }}</p>
                         </div>

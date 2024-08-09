@@ -246,9 +246,31 @@
             height: auto;
             margin-right: 10px;
         }
-
-
-
+        .card-title {
+            color: #000;
+            margin-top: 10px;
+            font-size: 1rem;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 60%; /* Adjust this value as needed */
+            max-width: 600px; /* Adjust this value as needed */
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -260,7 +282,7 @@
     </div>
 
     <div class="search-bar">
-         <input type="text" placeholder="Search for movies..." id="search-input">
+         <input type="text" placeholder="Search for movies and TV shows..." id="search-input">
          <button id="search-button">Search</button>
          <ul id="autocomplete-results" class="list-group"></ul>
     </div>
@@ -283,10 +305,21 @@
             {% for movie in movie_recommendations %}
                 <div class="col-md-2 mb-4">
                     <div class="card">
-                        <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}">
+                        <a href="{% url 'users:recommendations' %}?movie_id={{ movie.id }}">
+                            <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
+                        </a>
                         <div class="card-body">
-                            <h5 class="card-title">{{ movie.title }}</h5>
+                            <h5 class="card-title">
+                                <a href="{% url 'users:recommendations' %}?movie_id={{ movie.id }}" class="card-title">
+                                    {{ movie.title }}
+                                </a>
+                            </h5>
                         </div>
+                        <button class="btn-overlay btn-favorite" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}" data-action="add_to_favorites">💟</button>
+                        <button class="btn-overlay btn-watchlist" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}" data-action="add_to_watchlist">➕</button>
+                        <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}" data-action="watch_now">
+                            <span class="icon">👁️</span> Watch Now
+                        </button>
                     </div>
                 </div>
             {% empty %}
@@ -299,10 +332,21 @@
             {% for show in show_recommendations %}
                 <div class="col-md-2 mb-4">
                     <div class="card">
-                        <img src="https://image.tmdb.org/t/p/w500{{ show.poster_path }}" alt="{{ show.name }}">
+                        <a href="{% url 'users:recommendations' %}?tv_id={{ show.id }}">
+                            <img src="https://image.tmdb.org/t/p/w500{{ show.poster_path }}" class="card-img-top" alt="{{ show.name }}">
+                        </a>
                         <div class="card-body">
-                            <h5 class="card-title">{{ show.name }}</h5>
+                            <h5 class="card-title">
+                                <a href="{% url 'users:recommendations' %}?tv_id={{ show.id }}" class="card-title">
+                                    {{ show.name }}
+                                </a>
+                            </h5>
                         </div>
+                        <button class="btn-overlay btn-favorite" data-tv-id="{{ show.id }}" data-show-title="{{ show.name }}" data-action="add_to_favorites">💟</button>
+                        <button class="btn-overlay btn-watchlist" data-tv-id="{{ show.id }}" data-show-title="{{ show.name }}" data-action="add_to_watchlist">➕</button>
+                        <button class="btn-overlay btn-watch-now" data-tv-id="{{ show.id }}" data-show-title="{{ show.name }}" data-action="watch_now">
+                            <span class="icon">👁️</span> Watch Now
+                        </button>
                     </div>
                 </div>
             {% empty %}
@@ -310,7 +354,154 @@
             {% endfor %}
         </div>
     {% endif %}
-</div>
+     <!-- Modal -->
+    <div id="watchNowModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <p>Choose where to watch:</p>
+            <button id="watch-now-netflix">Netflix</button>
+            <button id="watch-now-amazon">Amazon Prime</button>
+        </div>
+    </div>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        var isAuthenticated = '{{ user.is_authenticated|yesno:"true,false" }}' === 'true';
+
+        document.querySelectorAll('.btn-overlay').forEach(function(button) {
+            button.addEventListener('click', function() {
+                var movieId = this.getAttribute('data-movie-id');
+                var showId = this.getAttribute('data-tv-id');
+                var movieTitle = this.getAttribute('data-movie-title');
+                var showTitle = this.getAttribute('data-show-title');
+                var action = this.getAttribute('data-action');
+
+                if (isAuthenticated) {
+                    if (action === 'watch_now') {
+                        // Show the modal
+                        $('#watchNowModal').show();
+
+                        // Set the appropriate title for the modal
+                        var title = movieTitle ? movieTitle : showTitle;
+
+                        // Handle Watch Now button clicks
+                        $('#watch-now-netflix').off('click').on('click', function() {
+                            var searchUrl = movieTitle
+                                ? `https://www.netflix.com/search?q=${encodeURIComponent(movieTitle)}`
+                                : `https://www.netflix.com/search?q=${encodeURIComponent(showTitle)}`;
+                            window.open(searchUrl, '_blank');
+                        });
+
+                        $('#watch-now-amazon').off('click').on('click', function() {
+                            var searchUrl = movieTitle
+                                ? `https://www.amazon.com/s?k=${encodeURIComponent(movieTitle)}`
+                                : `https://www.amazon.com/s?k=${encodeURIComponent(showTitle)}`;
+                            window.open(searchUrl, '_blank');
+                        });
+                    } else if (action === 'add_to_favorites' || action === 'add_to_watchlist') {
+                        var id = movieId || showId;
+                        var type = movieId ? 'movie' : 'show';
+                        var data = {
+                            movie_id:movieId || null,
+                            tv_id:showId || null,
+                            movie_title: movieTitle || null,
+                            show_title: showTitle || null
+                        }
+
+                        $.ajax({
+                            type: 'POST',
+                            url: action === 'add_to_favorites' ? '{% url "users:add_to_favorites" %}' : '{% url "users:add_to_wishlist" %}',
+                            data: JSON.stringify(data),
+                            contentType: 'application/json',
+                            headers: {
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    alert(response.message);
+                                } else {
+                                    alert(response.message);
+                                }
+                            },
+                            error: function() {
+                                alert('An error occurred.');
+                            }
+                        });
+                    }
+                } else {
+                    alert('You must be logged in to perform this action.');
+                }
+            });
+        });
+    // Close modal functionality
+        $('.close-button').on('click', function() {
+            $('#watchNowModal').hide();
+        });
+
+        // Close modal when clicking outside of the modal
+        $(window).on('click', function(event) {
+            if ($(event.target).is('#watchNowModal')) {
+                $('#watchNowModal').hide();
+            }
+        });
+        $("#search-input").on("input", function() {
+            var query = $(this).val();
+            if (query.length < 2) {
+                $("#autocomplete-results").hide();
+                return;
+            }
+            $.ajax({
+                url: "{% url 'users:autocomplete' %}",
+                dataType: "json",
+                data: {
+                    term: query
+                },
+                success: function(data) {
+                    $("#autocomplete-results").empty();
+                    if (data.length) {
+                        $.each(data, function(index, item) {
+                            var typeLabel = item.media_type === 'movie' ? 'Movie' : 'TV Show';
+                            $("#autocomplete-results").append(
+                                `<li class="list-group-item autocomplete-suggestion" data-movie-id="${item.id}" data-media-type="${item.media_type}">
+                                    <img src="${item.poster_url || 'https://via.placeholder.com/50x75'}" alt="${item.title} Poster" style="width: 50px; height: 75px; margin-right: 10px;">
+                                    ${item.title} <small>(${typeLabel})</small>
+                                </li>`
+                            );
+                        });
+                        $("#autocomplete-results").show();
+                    } else {
+                        $("#autocomplete-results").hide();
+                    }
+                }
+            });
+        });
+
+        $(document).on("click", ".autocomplete-suggestion", function() {
+            var mediaType = $(this).data("media-type");
+            var itemId = $(this).data("movie-id");
+
+            if (mediaType === 'movie') {
+                window.location.href = "{% url 'users:recommendations' %}?movie_id=" + itemId;
+            } else if (mediaType === 'tv') {
+                window.location.href = "{% url 'users:recommendations' %}?tv_id=" + itemId;
+            }
+        });
+
+        $("#search-button").click(function() {
+            var query = $("#search-input").val();
+            if (query) {
+                window.location.href = "{% url 'users:recommendations' %}?query=" + encodeURIComponent(query);
+            }
+        });
+
+        $(document).click(function(event) {
+            if (!$(event.target).closest('#search-input, #autocomplete-results').length) {
+                $("#autocomplete-results").hide();
+            }
+        });
+    });
+
+    </script>
 </body>
 </html>

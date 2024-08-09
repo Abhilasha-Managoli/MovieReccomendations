@@ -331,20 +331,6 @@
                                             data-type="{% if movie.title %}movie{% else %}tv{% endif %}">
                                         <span class="icon">👁️</span> Watch Now
                                     </button>
-                                    <div class="movie-actions">
-                                        <button class="btn-thumbs-up"
-                                                data-movie-id="{% if movie.title %}{{ movie.id }}{% endif %}"
-                                                data-tv-id="{% if movie.name %}{{ movie.id }}{% endif %}"
-                                                data-type="{% if movie.title %}movie{% else %}tv{% endif %}">
-                                            👍
-                                        </button>
-                                        <button class="btn-thumbs-down"
-                                                data-movie-id="{% if movie.title %}{{ movie.id }}{% endif %}"
-                                                data-tv-id="{% if movie.name %}{{ movie.id }}{% endif %}"
-                                                data-type="{% if movie.title %}movie{% else %}tv{% endif %}">
-                                            👎
-                                        </button>
-                                    </div>
                                 </div>
                                 <div class="movie-details">
                                     <h4>{% if movie.title %}{{ movie.title }}{% else %}{{ movie.name }}{% endif %}</h4>
