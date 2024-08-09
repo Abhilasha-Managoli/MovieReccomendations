@@ -78,35 +78,39 @@ def home(request):
 def popcornpicks_view(request):
     if request.user.is_authenticated:
         favorites = Favorites.objects.filter(user=request.user)
-        favorite_ids = [fav.movie_id for fav in favorites if fav.movie_id]
+        favorite_movie_ids = [fav.movie_id for fav in favorites if fav.movie_id]
+        favorite_show_ids = [fav.tv_id for fav in favorites if fav.tv_id]
 
         # Initialize recommendations list
-        recommendations = []
+        movie_recommendations = []
+        show_recommendations = []
+        no_favorites = not (favorite_movie_ids or favorite_show_ids)
 
-        if favorite_ids:
-            # Call the TMDB API to get similar movies
-            api_key: API_KEY
-            for movie_id in favorite_ids:
+        if favorite_movie_ids:
+            for movie_id in favorite_movie_ids:
                 url = f'https://api.themoviedb.org/3/movie/{movie_id}/recommendations'
-                params = {
-                    'api_key': API_KEY,
-                    'language': 'en-US',
-                    'page': 1
-                }
-                response = requests.get(url, params=params).json()
-                recommendations.extend(response.get('results', []))
+                params = {'api_key': API_KEY, 'language': 'en-US', 'page': 1}
+                try:
+                    response = requests.get(url, params=params).json()
+                    movie_recommendations.extend(response.get('results', []))
+                except requests.exceptions.RequestException as e:
+                    logging.error(f"Error fetching recommendations for movie ID '{movie_id}': {e}")
 
-            # Limit the number of recommendations to 6
-            recommendations = recommendations[:6]
+            # Limit the number of movie recommendations to 6
+            movie_recommendations = movie_recommendations[:6]
+
+        if favorite_show_ids:
+            show_recommendations = fetch_show_recommendations(favorite_show_ids)
 
         context = {
-            'recommendations': recommendations
+            'movie_recommendations': movie_recommendations,
+            'show_recommendations': show_recommendations,
+            'no_favorites': no_favorites
         }
 
         return render(request, 'popcornpicks.html', context)
     else:
         return redirect('account_login')
-
 
 @login_required
 def userinfo_view(request):
@@ -208,6 +212,24 @@ def userinfo_view(request):
         'favorites_shows': favorite_show_details,
     })
 
+
+def fetch_show_recommendations(favorite_show_ids):
+    url_template = 'https://api.themoviedb.org/3/tv/{}/similar'
+    recommendations = []
+
+    for show_id in favorite_show_ids:
+        url = url_template.format(show_id)
+        params = {'api_key': API_KEY}
+        try:
+            response = requests.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+            recommendations.extend(data.get('results', []))
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Error fetching recommendations for show ID '{show_id}': {e}")
+
+    # Return a limited number of recommendations
+    return recommendations[:6]
 @login_required
 def delete_from_watchlist(request, movie_id):
     item = get_object_or_404(Wishlist, user=request.user, movie_id=movie_id)
