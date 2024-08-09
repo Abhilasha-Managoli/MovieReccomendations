@@ -274,15 +274,16 @@
                 <!-- Watchlist -->
                 <div id="wishlist" style="display:none;">
                     <h2>Watchlist</h2>
+                    <h3>Movies on Your Watchlist</h3>
                     <div class="row">
-                        {% if wishlist_movies or wishlist_shows %}
+                        {% if wishlist_movies %}
                             {% for movie in wishlist_movies %}
                                 <div class="col-md-4 mb-4">
                                     <div class="card">
                                         <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
                                         <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}" data-action="watch_now">
                                             <span class="icon">👁️</span> Watch Now
-                                         </button>
+                                        </button>
                                         <div class="card-body">
                                             <h5 class="card-title">{{ movie.title }}</h5>
                                             <p class="card-text genres">
@@ -291,21 +292,30 @@
                                             <p class="card-text">
                                                 <strong>Description:</strong> {{ movie.overview }}
                                             </p>
-                                             <form action="{% url 'users:delete_from_watchlist' movie.id %}" method="post" class="delete-button">
+                                            <form action="{% url 'users:delete_from_watchlist' movie.id %}" method="post" class="delete-button">
                                                 {% csrf_token %}
-                                                 <button type="submit" class="btn btn-danger">Delete</button>
+                                                <button type="submit" class="btn btn-danger">Delete</button>
                                             </form>
                                         </div>
                                     </div>
                                 </div>
                             {% endfor %}
+                        {% else %}
+                            <p>No movies in your watchlist.</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Section for Watchlist TV Shows -->
+                    <h3>TV Shows on Your Watchlist</h3>
+                    <div class="row">
+                        {% if wishlist_shows %}
                             {% for show in wishlist_shows %}
                                 <div class="col-md-4 mb-4">
                                     <div class="card">
                                         <img src="https://image.tmdb.org/t/p/w500{{ show.poster_path }}" class="card-img-top" alt="{{ show.name }}">
                                         <button class="btn-overlay btn-watch-now" data-tv-id="{{ show.id }}" data-show-title="{{ show.title }}" data-action="watch_now">
                                             <span class="icon">👁️</span> Watch Now
-                                         </button>
+                                        </button>
                                         <div class="card-body">
                                             <h5 class="card-title">{{ show.title }}</h5>
                                             <p class="card-text genres">
@@ -323,7 +333,7 @@
                                 </div>
                             {% endfor %}
                         {% else %}
-                            <p>No items in your watchlist.</p>
+                            <p>No TV shows in your watchlist.</p>
                         {% endif %}
                     </div>
                 </div>
@@ -331,15 +341,16 @@
                 <!-- Favorites -->
                 <div id="favorites" style="display:none;">
                     <h2>Favorites</h2>
+                    <h3>Favorite Movies</h3>
                     <div class="row">
-                        {% if favorites_movies or favorites_shows %}
+                        {% if favorites_movies %}
                             {% for movie in favorites_movies %}
                                 <div class="col-md-4 mb-4">
                                     <div class="card">
                                         <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
                                         <button class="btn-overlay btn-watch-now" data-movie-id="{{ movie.id }}" data-movie-title="{{ movie.title }}" data-action="watch_now">
                                             <span class="icon">👁️</span> Watch Now
-                                         </button>
+                                        </button>
                                         <div class="card-body">
                                             <h5 class="card-title">{{ movie.title }}</h5>
                                             <p class="card-text genres">
@@ -356,13 +367,22 @@
                                     </div>
                                 </div>
                             {% endfor %}
+                        {% else %}
+                            <p>No favorite movies.</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Section for Favorite TV Shows -->
+                    <h3>Favorite TV Shows</h3>
+                    <div class="row">
+                        {% if favorites_shows %}
                             {% for show in favorites_shows %}
                                 <div class="col-md-4 mb-4">
                                     <div class="card">
                                         <img src="https://image.tmdb.org/t/p/w500{{ show.poster_path }}" class="card-img-top" alt="{{ show.name }}">
                                         <button class="btn-overlay btn-watch-now" data-tv-id="{{ show.id }}" data-show-title="{{ show.title }}" data-action="watch_now">
                                             <span class="icon">👁️</span> Watch Now
-                                         </button>
+                                        </button>
                                         <div class="card-body">
                                             <h5 class="card-title">{{ show.title }}</h5>
                                             <p class="card-text genres">
@@ -380,13 +400,10 @@
                                 </div>
                             {% endfor %}
                         {% else %}
-                            <p>No items in your favorites.</p>
+                            <p>No favorite TV shows.</p>
                         {% endif %}
                     </div>
                 </div>
-            </main>
-        </div>
-    </div>
         <!-- Modal -->
     <div id="watchNowModal" class="modal">
         <div class="modal-content">
