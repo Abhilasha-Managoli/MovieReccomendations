@@ -84,7 +84,7 @@
             right: 0;
             transform: translateY(50%);
             padding: 8px 16px;
-            background-color: rgba(255, 255, 255, 0.3); /* Initial background color with some transparency */
+            background-color: rgba(255, 255, 255, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -238,8 +238,8 @@
             margin: 15% auto;
             padding: 20px;
             border: 1px solid #888;
-            width: 60%; /* Adjust this value as needed */
-            max-width: 600px; /* Adjust this value as needed */
+            width: 60%;
+            max-width: 600px;
         }
         .close-button {
             color: #aaa;
@@ -252,6 +252,15 @@
             color: black;
             text-decoration: none;
             cursor: pointer;
+        }
+        .footer-text{
+            background-color: #f8ffe5;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 10px 0;
+            text-align: center;
         }
     </style>
 </head>
@@ -356,6 +365,12 @@
             <button id="watch-now-amazon">Amazon Prime</button>
         </div>
     </div>
+
+    <footer class="footer footer-text mt-auto py-3 fixed-bottom">
+        <div class="container text-center">
+            <span class="text-muted">Copyright &copy; 2024 Abhilasha Managoli & Pratistha Dhungana. All rights reserved</span>
+        </div>
+    </footer>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>

@@ -94,7 +94,7 @@
         }
         .btn-watchlist {
             top: 10px;
-            left: 60px; /* Adjust this value as needed to move the button towards the left */
+            left: 60px;
         }
         .btn-watch-now {
             bottom: 30%;
@@ -116,7 +116,7 @@
         }
         .movie-details {
             flex: 1;
-            margin-left: 20px; /* Adjust for spacing between image and details */
+            margin-left: 20px;
         }
         .btn-thumbs-up,
         .btn-thumbs-down {
@@ -134,10 +134,10 @@
         .movie-actions {
             display: flex;
             align-items: center;
-            gap: 10px; /* Space between the buttons */
+            gap: 10px;
             position: absolute;
-            bottom: -45px; /* Positioning from the bottom of the movie container */
-            left: 47px; /* Positioning from the left of the movie container */
+            bottom: -45px;
+            left: 47px;
             z-index: 10;
         }
         .logo-container {
@@ -223,7 +223,6 @@
             height: auto;
             margin-right: 10px;
         }
-        /* Modal styles */
         .modal {
             display: none;
             position: fixed;
@@ -241,8 +240,8 @@
             margin: 15% auto;
             padding: 20px;
             border: 1px solid #888;
-            width: 60%; /* Adjust this value as needed */
-            max-width: 600px; /* Adjust this value as needed */
+            width: 60%;
+            max-width: 600px;
         }
         .close-button {
             color: #aaa;
@@ -255,6 +254,15 @@
             color: black;
             text-decoration: none;
             cursor: pointer;
+        }
+        .footer-text{
+            background-color: #f8ffe5;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 10px 0;
+            text-align: center;
         }
 
     </style>
@@ -358,6 +366,12 @@
             <button id="watch-now-amazon">Amazon Prime</button>
         </div>
     </div>
+
+    <footer class="footer footer-text mt-auto py-3 fixed-bottom">
+        <div class="container text-center">
+            <span class="text-muted">Copyright &copy; 2024 Abhilasha Managoli & Pratistha Dhungana. All rights reserved</span>
+        </div>
+    </footer>
 
     <script>
     // CSRF Token Setup
