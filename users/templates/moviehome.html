@@ -1,5 +1,4 @@
 {% load static %}
-{% load socialaccount %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -283,7 +282,7 @@
                 <a href="{% url 'users:userinfo' %}" class="btn btn-secondary" id="user-button">{{ user.first_name }}</a>
                 <a href="{% url 'users:logout' %}" class="btn btn-secondary">Logout</a>
             {% else %}
-                <a href="{% provider_login_url 'google' %}?next={% url 'users:home' %}" class="btn btn-secondary">Login With Google</a>
+                <a href="{% url 'social:begin' 'google-oauth2' %}" class="btn btn-secondary-2">Login With Google</a>
             {% endif %}
         </div>
     </div>

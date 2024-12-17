@@ -28,11 +28,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "users",
     "django.contrib.sites",
-    "allauth",
-    "allauth.account",
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.google",
     'bootstrap4',
+    'social_django',
 ]
 
 SOCIALACCOUNT_PROVIDERS = {
@@ -45,6 +42,9 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = "1093408642164-a5hstem2f5mut8tmfbfj8eh8tgbmlvt1.apps.googleusercontent.com"
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = "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"
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -53,7 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware', #gpt
+    'social_django.middleware.SocialAuthExceptionMiddleware',  # Add this
 ]
 
 ROOT_URLCONF = 'mysite.urls'
@@ -69,6 +69,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',  # For social-auth
+                'social_django.context_processors.login_redirect',
             ],
         },
     },
@@ -128,9 +130,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
-    "allauth.account.auth_backends.AuthenticationBackend"
+    'social_core.backends.google.GoogleOAuth2',  # Add this
+
 )
 
-LOGIN_REDIRECT_URL = "/"
-LOGOUT_REDIRECT_URL = "/"
+LOGIN_URL = '/auth/login/google-oauth2/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
 
