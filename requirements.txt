@@ -1,6 +1,6 @@
 asgiref==3.8.1
 beautifulsoup4==4.12.3
-boto3==1.35.45
+boto3==1.35.42
 botocore==1.35.45
 certifi==2024.8.30
 cffi==1.17.1
@@ -14,13 +14,13 @@ django-appconf==1.0.6
 django-bootstrap-v5==1.0.11
 django-bootstrap4==24.3
 django-cryptography==1.1
+django-environ==0.11.2
 django-heroku==0.3.1
 django-js-lib-bootstrap5==5.3.3.1
 django-requests==0.0.2
 django-sslserver==0.22
 django-storages==1.14.4
 djangorestframework==3.15.2
-djangorestframework-jwt==1.11.0
 djangorestframework-simplejwt==5.3.1
 exceptiongroup==1.2.2
 gitdb==4.0.11
