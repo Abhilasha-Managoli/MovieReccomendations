@@ -1,0 +1,36 @@
+# Python compiled files
+*.pyc
+*.pyo
+__pycache__/
+
+# Virtual environment
+venv/
+env/
+
+# Django SQLite database file
+db.sqlite3
+
+# Environment variables
+.env
+
+# Heroku
+*.log
+*.pot
+*.py[cod]
+*.so
+.Python
+env/
+build/
+dist/
+*.manifest
+*.spec
+
+# PyCharm project settings
+.idea/
+
+# Static and media folders (optional, depending on your project setup)
+staticfiles/
+media/
+
+
+.DS_Store
